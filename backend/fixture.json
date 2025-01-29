@@ -1,0 +1,139 @@
+[
+    {
+        "model": "activities.perspective",
+        "pk": 1,
+        "fields":{
+            "name": "作業特性",
+            "color": "#fff",
+            "use_def_color": false,
+            "categorize_model":"InputValueModel"
+        }
+    },
+    {
+        "model": "activities.perspective",
+        "pk": 2,
+        "fields":{
+            "name": "作業分類（例）",
+            "color": "#fff",
+            "use_def_color": false,
+            "categorize_model": null
+        }
+    },
+    {
+        "model": "activities.category",
+        "pk": 1,
+        "fields":{
+            "name": "ザッピング",
+            "color": "#7fffff",
+            "perspective": 1
+        }
+    },
+    {
+        "model": "activities.category",
+        "pk": 2,
+        "fields":{
+            "name": "インプット",
+            "color": "#7fbfff",
+            "perspective": 1
+        }
+    },
+    {
+        "model": "activities.category",
+        "pk": 3,
+        "fields":{
+            "name": "アウトプット",
+            "color": "#7f7fff",
+            "perspective": 1
+        }
+    },
+    {
+        "model": "activities.category",
+        "pk": 4,
+        "fields":{
+            "name": "ソフトウェア開発",
+            "color": "#005493",
+            "perspective": 2
+        }
+    },
+    {
+        "model": "activities.category",
+        "pk": 5,
+        "fields":{
+            "name": "記事作成",
+            "color": "#371a94",
+            "perspective": 2
+        }
+    },
+    {
+        "model": "activities.category",
+        "pk": 6,
+        "fields":{
+            "name": "会計",
+            "color": "#b18cfe",
+            "perspective": 2
+        }
+    },
+    {
+        "model": "activities.categorizedkeyword",
+        "pk": 1,
+        "fields":{
+            "word": "python",
+            "positive": true,
+            "category": 4
+        }
+    },
+    {
+        "model": "activities.categorizedkeyword",
+        "pk": 2,
+        "fields":{
+            "word": "django",
+            "positive": true,
+            "category": 4
+        }
+    },
+    {
+        "model": "activities.categorizedkeyword",
+        "pk": 3,
+        "fields":{
+            "word": "eclipse",
+            "positive": true,
+            "category": 4
+        }
+    },
+    {
+        "model": "activities.categorizedkeyword",
+        "pk": 4,
+        "fields":{
+            "word": "プロジェクトマネージメント",
+            "positive": true,
+            "category": 5
+        }
+    },
+    {
+        "model": "activities.categorizedkeyword",
+        "pk": 5,
+        "fields":{
+            "word": "システムエンジニアリング",
+            "positive": true,
+            "category": 5
+        }
+    },
+    {
+        "model": "activities.categorizedkeyword",
+        "pk": 6,
+        "fields":{
+            "word": "freee",
+            "positive": true,
+            "category": 6
+        }
+    },
+    {
+        "model": "activities.categorizedkeyword",
+        "pk": 7,
+        "fields":{
+            "word": "会計",
+            "positive": true,
+            "category": 6
+        }
+    }
+]

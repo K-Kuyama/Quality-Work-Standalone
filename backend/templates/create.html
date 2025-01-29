@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+ <body>
+   <div class="create_form">
+       <h1>新規会員登録画面</h1>
+       <h2>新規登録したいユーザー情報を入力してください</h2>
+
+       <!-- createビューをpostで呼ぶことを宣言したフォーム -->
+       <form action="{% url 'create' %}" method="post" class="form_create">
+         <div class="input">
+
+           <!--form標準のフォーム検証エラーメッセージ表示エリア-->
+           {% if form.non_field_errors %}
+             <div class="header">エラー</div>
+             <ul class="list">
+               {% for non_field_error in form.non_field_errors %}
+               <li>{{ non_field_error }}</li>
+               {% endfor %}
+             </ul>
+           {% endif %}
+
+           <!-- 自作のフォームフィールド表示エリア -->
+           {% for field in form %}
+             <div class="input_field">
+				{% if not field.is_hidden %}
+               		<div class="field_item">{{ field.label_tag }} {{ field }}</div>
+               		
+              	{% else %}
+              		{{ field.as_hidden}}
+              	{% endif %}
+              	{% if field.errors %}
+              		<!--自作のエラーメッセージ表示エリア -->
+                 	<p class="field_error">{{ field.errors.0 }}</p>
+              	{% endif %}
+             </div>
+           {% endfor %}
+
+           {% csrf_token %}
+           <button type="submit" class="user_button">ユーザー登録</button>
+         </div>
+       </form>
+     </div>
+ </body>
+</html>

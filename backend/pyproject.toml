@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = "Backend using Django"
+authors = ["Kazuhiro Kuyama <kuyama@systemdesignk2.jp>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "^5.1.2"
+djangorestframework = "^3.15.2"
+django-tenant-schemas = "^1.12.0"
+janome = "^0.5.0"
+psycopg2 = "^2.9.10"
+python-dateutil = "^2.9.0.post0"
+django-environ = "^0.11.2"
+mod-wsgi = "^5.0.1"
+pynput = "^1.7.7"
+requests = "^2.32.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
