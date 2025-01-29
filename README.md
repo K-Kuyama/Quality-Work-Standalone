@@ -2,12 +2,16 @@
 Time tracker for personal use
 
 ## How to make
-prerequisite : You need GNU make for building environment & the module.
+### prerequisite :   
+- GNU make 
+- Poetry ver.1.7.1 or later
+- Node.js ver. 20.11.0 or later
 
-1. Building development environment  
+### 1. Building development environment  
 ```  % make env ```
 
-2. Building the module  
+### 2. Building the module  
 ```  % make module ```   
-If build them sucseefully, you can find the module under "backend/dist" directory.
+
+If build the module finished sucseefully, you can find the module under "backend/dist" directory.
   
