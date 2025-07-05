@@ -88,6 +88,7 @@ class HttpEventProducer(EventProducer):
         
 
     def createEvent(self, ar, last_window, end_time):
+        #ウィンドウ情報をサーバに送信
         event_data = ar.get_data()
         start_time = ar.start_time
         if end_time :
@@ -118,11 +119,45 @@ class HttpEventProducer(EventProducer):
             'title':title_str,
             }
         print(f"request:{request_body}")
-        self.sendEvent(request_body)
+        self.sendEvent(request_body, "api/Activity/")
 
 
+    def createAudioActivityEvent(self, window, start_time, end_time):
+        #音声が使われていた期間の情報をAudioActivityイベントとしてサーバーに送信する。
+        #windowは、音声が流れ始めた時にアクティブだったウインドウ
 
-    def sendEvent(self, request_body):
+        duration = end_time - start_time
+
+        title_str = window['title']
+        if(len(title_str) > 0 ):
+            if(len(title_str) > 256 ):
+                title_str = title_str[:256]
+        else:
+            title_str ="NONE"
+
+        request_body={
+            'start_time':start_time.strftime("%Y-%m-%d %H:%M:%S.%f%z"),
+            'end_time':end_time.strftime("%Y-%m-%d %H:%M:%S.%f%z"),
+            'duration':duration.seconds,
+            'start_app': window['app'],
+            'start_title': title_str,
+            'longest_app': None,
+            'longest_title': None,
+            'another_app': None,
+            'another_title': None
+        }
+        print(request_body)
+        self.sendEvent(request_body, "api/AudioActivity/CreateActivity/")
+
+
+    def flushEvents(self):
+        #request_poolにあるイベントをフラッシュする
+        self.sendEvent(None, "api/AudioActivity/CreateActivity/")
+
+
+    def sendEvent(self, request_body, local_path):
+        # 最終的にPOSTリクエストをサーバーに送信する。送信先のURLは、self.post_url+local_urlで、
+        # request_bodyを送信する。
         if self.multi:
             if (self.hasSession == False):
                 if (self.getSession() != True):
@@ -132,10 +167,13 @@ class HttpEventProducer(EventProducer):
             headers = {"X-CSRFToken": self.csrf_cookie, "Referer":self.post_url,}
         else:
             headers ={}
-        if (len(self.request_pool)>0):
-            self.request_pool.append(request_body)
+        if (len(self.request_pool)>0): 
+            if not request_body == None: # flushEvents()から呼ばれている場合
+                self.request_pool.append(request_body)
             try:
-                response = self.session.post(self.post_url+"api/Activity/bulk/",  headers=headers, json=self.request_pool)
+                print(self.post_url+local_path+"bulk/")
+                print(self.request_pool)
+                response = self.session.post(self.post_url+local_path+"bulk/",  headers=headers, json=self.request_pool)
                 response.raise_for_status()
                 #response = self.session.post(self.post_url+"Activity/bulk/",  headers=headers, json=self.request_pool)
                 print(f"{response} : {self.request_pool}")
@@ -151,7 +189,7 @@ class HttpEventProducer(EventProducer):
                         self.getSession()
         else:
             try:
-                response = self.session.post(self.post_url+"api/Activity/",  headers=headers, json=request_body)
+                response = self.session.post(self.post_url+local_path,  headers=headers, json=request_body)
                 response.raise_for_status()
                 #response = self.session.post(self.post_url+"Activity/",  headers=headers, json=request_body)
                 #print(response)
@@ -187,6 +225,7 @@ class HttpEventProducer(EventProducer):
 
  
     def createBlankEvent(self, bp):
+        #ウインドウへのアクセスがなかったことを示すイベントを送信
         start_time = bp.start_time
 #        duration = datetime.now(timezone.utc) - start_time
         duration = datetime.now(ZoneInfo("Asia/Tokyo")) - start_time
@@ -205,7 +244,7 @@ class HttpEventProducer(EventProducer):
             'title':'blank',
             }
         print(f"request:{request_body}")
-        response = self.sendEvent(request_body)
+        response = self.sendEvent(request_body, "api/Activity/")
 #        response = requests.post(POST_URL, json=request_body)
         print(response)
 

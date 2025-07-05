@@ -33,12 +33,13 @@ function FullDashoboardPage(){
 				    <label className="graph_name">時系列グラフ</label>
                     <TimeGraph target_date={target_date} kind_of_period="day" kind_of_value="duration" />
                 </div>
-
+                
+                
                 <div className="graph_base">
 				    	<label className="graph_name">時系列グラフ</label>
                         <CategorizedTimeGraph target_date={target_date} p_id={p_id} kind_of_period="day"/>
                 </div>
-
+                
                 <div className="row_items_base">
                     <div className="inner_graph_base_l">
                         <label className="graph_name">トップタイトル</label>
@@ -49,14 +50,14 @@ function FullDashoboardPage(){
                         <TopItems target_date={target_date} item="app" />
                     </div>
                 </div>
-
+               
                 <div className="row_items_base">
                     <div className="inner_graph_base_c">
                         <label className="graph_name">{p_id[1]}</label>
                         <CategoryGraph p_id={p_id[0]} p_name={p_id[1]} target_date={target_date} no_title="true" />
                     </div>
                 </div>
-
+               
 			</div>
         </div>
 	)

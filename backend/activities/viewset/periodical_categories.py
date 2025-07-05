@@ -13,12 +13,13 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
 from .sort_out_by_categories import SortOutByCategoriesView
+from .mixins import CreateIndexMixin
 from activities.serializers.periodical_category_serializer import PeriodicalCategorySerializer
 
 from django.conf import settings
 from activities.decolators import attach_decorator
 
-class PeriodicalCategoriesView(SortOutByCategoriesView):
+class PeriodicalCategoriesView(SortOutByCategoriesView, CreateIndexMixin):
     serializer_class = PeriodicalCategorySerializer
 
     
@@ -41,17 +42,58 @@ class PeriodicalCategoriesView(SortOutByCategoriesView):
         else:
             self.time_strings = "hour"
 
+        self.kind_of_value = self.DURATION 
+        if 'kind_of_value' in params:
+            if params.get('kind_of_value').lower() == 'duration':
+                self.kind_of_value = self.DURATION
+            elif params.get('kind_of_value').lower() == 'strokes':
+                self.kind_of_value = self.STROKES
+            elif params.get('kind_of_value').lower() == 'scrolls':
+                self.kind_of_value = self.SCROLLS
+            elif params.get('kind_of_value').lower() == 'distance':
+                self.kind_of_value = self.DISTANCE
+            else:
+                self.kind_of_value = self.DURATION    
+
         st_str = self.request.query_params.get("start")
         self.start_datetime = datetime.strptime(st_str, "%Y-%m-%d %H:%M:%S.%f")
 
 
     def createResultData(self, c_list):
-        index_list = []
-        for category in c_list:
-            idxd = self.createIndexData(category.activities)
-            index_list.append(PeriodicalCategory(category.categoryName, category.backgroundColor, idxd))
-        return index_list
+        if len(c_list) > 0:
+            index_list = []
+            for category in c_list:
+                idxd = self.createIndexData(category.activities)
+                index_list.append(PeriodicalCategory(category.categoryName, category.backgroundColor, idxd))
+            return index_list
+        else:
+            return [PeriodicalCategory(None,None,self.createIndexData([]))]
         
+        
+    @attach_decorator(settings.QT_MULTI,method_decorator(login_required))    
+    def list(self, request, *args, **kwargs):
+        self.evaluate_params()
+        queryset = self.get_combined_queryset()
+        # カテゴリー情報追加
+        cserializer = self.getCSerializer(queryset, many=True, p_id=self.perspective)
+        # カテゴリー別にグルーピング
+        c_list = self.sortOut(cserializer.data)
+        # 単位時間ごとのデータを作成
+        pl = self.createResultData(c_list)
+        
+        serializer = self.get_serializer(pl, many=True)
+        return Response(serializer.data)
+        
+
+class PeriodicalCategory:
+    # カテゴリー別にアクティビティデータを整理したデータ構造
+    def __init__(self, name, color, data):
+        self.name = name
+        self.backgroundColor = color
+        self.data_array = data
+        
+    
+'''      
     def createIndexData(self, activity_list):
         
         str_index = 0
@@ -105,18 +147,18 @@ class PeriodicalCategoriesView(SortOutByCategoriesView):
             #print(f"{end_time = :%X %Z}")
             #print(round_time)
             if end_time > round_time:
-                #print(f"end time : {end_time} <-> round time : {round_time}")
+                print(f"end time : {end_time} <-> round time : {round_time}")
                 td = end_time - round_time
                 before = td.total_seconds()
                 after = act.duration-before
-                category_index_data[index]['duration'] += before
+                category_index_data[index]['value'] += before
                 if index+1 <n_of_index:
                     #print(f"index {index}: max {n_of_index}")
-                    category_index_data[index+1]['duration'] += after
+                    category_index_data[index+1]['value'] += after
             else:
                 #if(self.kind_of_period =="month"):
                 #    print(f"index ::{index}")
-                category_index_data[index]['duration'] += act.duration
+                category_index_data[index]['value'] += act.duration
             
         return category_index_data
         
@@ -145,39 +187,15 @@ class PeriodicalCategoriesView(SortOutByCategoriesView):
             index_day = self.start_datetime
             for p in range(n_of_index):
                 #print(f"p:{p} - index_day:{index_day}")
-                hourly_data.append({'index':str(index_day.day).zfill(2)+f" ({index_day.strftime('%a')})", 'duration':0})
+                hourly_data.append({'index':str(index_day.day).zfill(2)+f" ({index_day.strftime('%a')})", 'value':0})
                 index_day = index_day + timedelta(days=1)
             #print("----------")
 #                index_day = datetime(index_day, '+1 days')
         else:
             for p in range(n_of_index):
-                hourly_data.append({'index':str(p+adjust).zfill(2), 'duration':0})
+                hourly_data.append({'index':str(p+adjust).zfill(2), 'value':0})
         #print(f"hourly_data: {hourly_data}")
         
         return hourly_data, n_of_index 
 
-
-        
-    @attach_decorator(settings.QT_MULTI,method_decorator(login_required))    
-    def list(self, request, *args, **kwargs):
-        self.evaluate_params()
-        queryset = self.get_queryset()
-        # カテゴリー情報追加
-#        cserializer = self.getCSerializer(queryset, many=True, p_id=self.request.query_params.get('p_id'))
-        cserializer = self.getCSerializer(queryset, many=True, p_id=self.perspective)
-        # カテゴリー別にグルーピング
-        c_list = self.sortOut(cserializer.data)
-        # 単位時間ごとのデータを作成
-        pl = self.createResultData(c_list)
-        
-        serializer = self.get_serializer(pl, many=True)
-        return Response(serializer.data)
-        
-class PeriodicalCategory:
-    def __init__(self, name, color, data):
-        self.name = name
-        self.backgroundColor = color
-        self.data_array = data
-        
-    
-        
+'''

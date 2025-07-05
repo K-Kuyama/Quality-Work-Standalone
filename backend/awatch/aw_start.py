@@ -243,7 +243,7 @@ def aw_start():
 
     window = None
     while True:
-        #    print(counter)
+        #        print(counter)
         try:
             window = get_window_info()
             #window = get_current_window("applescript")
@@ -295,7 +295,9 @@ def aw_start():
                         #print(f"event befor blank period : {last_window['app']}")
                         ar.reset()
                         bp.comitted = True
- 
+
+        time.sleep(poll_time) 
+        
         # システムスリープがあった場合には、スリープ前のウインドウイベントと、スリープ時のブランクイベントを作成する。
         # スリープがあったかどうかを前回ループからの経過時間で判断
         if not current_loop_time :
@@ -330,7 +332,7 @@ def aw_start():
 
                     
 #            print(f"{start_time}:{duration.seconds}:{event_data}")
-        time.sleep(poll_time)
+#        time.sleep(poll_time)
 #        print("wait")
 #        time.sleep(1)
         

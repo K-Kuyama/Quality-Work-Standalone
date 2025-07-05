@@ -15,6 +15,7 @@ env_win:
 	cp backend/pyproject-windows.toml backend/pyproject.toml
 	cp backend/poetry-win.lock backend/poetry.lock
 	cp backend/quality-work-windows.file backend/quality-work.spec
+	cp backend/media/audio_settings-windows.json backend/media/audio_settings.json
 	$(MAKE) env -C backend
 	$(MAKE) env -C frontend
 

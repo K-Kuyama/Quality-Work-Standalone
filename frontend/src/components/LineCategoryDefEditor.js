@@ -42,7 +42,11 @@ function LineCategoryDefEditor(props){
 		console.log(request_body);
 		let cookies = new Cookies();
 		let token = cookies.get('csrftoken')
-		fetch(Settings.HOME_PATH+"/api/user_def/Category/"+additional_str, {
+		let target = Settings.HOME_PATH+'/api/user_def/Category/'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/Category/'
+		}
+		fetch(target+additional_str, {
 			method : method_str,
 			credentials: "same-origin",
 			headers: {

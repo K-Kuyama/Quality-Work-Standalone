@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 //import ControlPanel from "./ControlPanel";
 import Pagination from "./Pagination";
 import ActivityCheckList from "./ActivityCheckList";
 import CategoryButtonList from "./CategoryButtonList";
 import { getBothEnds } from "./utils";
+import { ShowPolicyContext } from '../Context';
 import Cookies from "universal-cookie";
 import Settings from "../Settings";
 
@@ -15,7 +16,7 @@ function ActivitySelector(props){
 	const [haveData, setHaveData] = useState(false); 
 	//const [target_date, setDate] = useState(props.target_date);
 	const [item, setItem] = useState(props.item);
-
+	const ctx = useContext(ShowPolicyContext);
 	const clearCheck = props.handler;
 	const setCurrent = props.page_handler;
 
@@ -34,7 +35,11 @@ function ActivitySelector(props){
 		if(activities.length > 0){
 			let cookies = new Cookies();
 			let token = cookies.get('csrftoken')
-			fetch(Settings.HOME_PATH+"/api/user_def/bulk_c_activity/", {
+			let target = Settings.HOME_PATH+'/api/user_def/bulk_c_activity/'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/bulk_c_activity/'
+			}	
+			fetch(target, {
 				method : "POST",
 				credentials: "same-origin",
 				headers: {
@@ -65,7 +70,11 @@ function ActivitySelector(props){
 		if(activities.length > 0){
 			let cookies = new Cookies();
 			let token = cookies.get('csrftoken')
-			fetch(Settings.HOME_PATH+"/api/user_def/delete_c_activity/", {
+			let target = Settings.HOME_PATH+'/api/user_def/delete_c_activity/'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/delete_c_activity/'
+			}	
+			fetch(target, {
 				method : "POST",
 				credentials: "same-origin",
 				headers: {
@@ -99,19 +108,24 @@ function ActivitySelector(props){
 		let both_ends = getBothEnds(date);
 		let d1 = both_ends[0];
 		let d2 = both_ends[1];
+		let policy = ctx.policy;
 		let params = {};
 		if(props.item ==="title_list"){
-			params = {start : d1, end : d2, pagination : 'True', p_id : props.p_id, merged_item: 'title', sorted_by: 'duration'};
+			params = {start : d1, end : d2, show_policy : policy, pagination : 'True', p_id : props.p_id, merged_item: 'title', sorted_by: 'duration'};
 		} else if(props.item === "app_list"){
-			params = {start : d1, end : d2, pagination : 'True', p_id : props.p_id, merged_item: 'app', sorted_by: 'duration'};
+			params = {start : d1, end : d2, show_policy : policy, pagination : 'True', p_id : props.p_id, merged_item: 'app', sorted_by: 'duration'};
 		}else{
-			params = {start : d1, end : d2, pagination : 'True', p_id : props.p_id, sorted_by: 'time'};
+			params = {start : d1, end : d2, show_policy : policy, pagination : 'True', p_id : props.p_id, sorted_by: 'time'};
 		}
 		//キーワード、アイテム設定時にページが変わるのを防ぐため、handleReloadの時に保持していた表示するページを指定する
 		params.page = props.current; 
 		
 		let query = new URLSearchParams(params);
-		fetch(Settings.HOME_PATH+'/api/Activity/categorized_event/?'+ query,{
+		let target = Settings.HOME_PATH+'/api/Activity/categorized_event/?'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/categorized_event/?'
+		}
+		fetch(target + query,{
 					credentials: "same-origin",
 				}
 		)

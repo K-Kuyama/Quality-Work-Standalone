@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useContext} from 'react';
 import { getBothEnds } from "./utils";
 import { ja } from "date-fns/locale";
 import Settings from "../Settings";
+import { ShowPolicyContext } from '../Context';
 
 import TimeChartOption from "./TimeChartOption";
 
@@ -193,7 +194,7 @@ function TimeChart(props){
 	const [p_id, setPid] = useState(undefined);
     const [from_to, setFromTo] = useState([])
 
-
+	const ctx = useContext(ShowPolicyContext)
 
    useEffect(() => {
    		setDate(props.target_date);
@@ -203,12 +204,19 @@ function TimeChart(props){
 			let both_ends = getBothEnds(date, props.kind_of_period);		// OK
 			let d1 = both_ends[0];
 			let d2 = both_ends[1];
-			let params = {start : d1, end : d2};
+			let policy = ctx.policy
+			let params = {start : d1, end : d2, show_policy : policy};
 			//if(props.p_id){
 			//	params = {start : d1, end : d2, p_id : props.p_id};
 			//}
 			let query = new URLSearchParams(params);
-			fetch(Settings.HOME_PATH+'/api/Activity/working_time_chart/?'+ query	
+
+			let target = Settings.HOME_PATH+'/api/Activity/working_time_chart/?'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/working_time_chart/?'
+			}
+						
+			fetch(target + query	
 			)
 			.then(response => {
 				return response.json();

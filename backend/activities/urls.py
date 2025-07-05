@@ -6,7 +6,7 @@ Created on 2024/04/26
 from django.urls import path
 from django.contrib.auth.views import LoginView, LogoutView
 from rest_framework import routers
-from .views import ActivityViewSet, BulkCreateActivityView, TimePeriodView, PaginatedEventView, TotalEventTimeByHour
+from .views import ActivityViewSet, BulkCreateActivityView, TimePeriodView, PaginatedEventView, TotalEventTimeByHour, SystemSettingsViewSet
 from activities.viewset.merged_event import MergedEventView
 from activities.viewset.categorized_event import CategorizedEventView
 from activities.viewset.periodical_graph import TotalEventTimeForPeriodicalGraph
@@ -20,14 +20,21 @@ from activities.viewset.sort_out_by_multi_categories import SortOutByMutiCategor
 from activities.viewset.periodical_categories import PeriodicalCategoriesView
 from activities.viewset.activity_db_info import ActivityDbInfoView
 from activities.viewset.file_upload import FileUploadView
+#from activities.viewset.db_upload import DbUploadView
 from activities.viewset.working_time_chart import WorkingTimeChartView
+from activities.viewset.audio_activity import CreateAudioActivityView, AudioActivityView, AudioActicityUpdateView
+from activities.viewset.combinedActivitiesTest import CombinedActivitiesTestView
+from activities.viewset.daemon_settings import DaemonSettingsViewSet
 
 router = routers.DefaultRouter()
 router.register(r'Activity', ActivityViewSet)  #use
+router.register(r'Activity/DaemonSettings', DaemonSettingsViewSet, basename="daemon_settings")
+router.register(r'SystemSettings', SystemSettingsViewSet)  #use
 router.register(r'user_def/Perspective', PerspectiveViewSet) #use
 router.register(r'user_def/Category', CategoryViewSet) #use
 router.register(r'user_def/CategorizedActivity', CategorizedActivityViewSet) #use
 router.register(r'user_def/CategorizedKeyword', CategorizedKeyWordViewSet) #use
+#router.register(r'Activity/DaemonSettings', DaemonSettingsViewSet, basename="daemon_settings")
 #router.register(r'Activity/ActivityDbInfo', ActivityDbInfoViewSet)
 
 
@@ -52,6 +59,12 @@ urlpatterns = [
     path('user_def/perspective_editor/', PerspectiveEditorView.as_view(), name="perspective_editor"), #use
     path('Activity/activity_db_info/<pk>/', ActivityDbInfoView.as_view(), name="activity_db_info"), #use
     path('Activity/file_upload/', FileUploadView.as_view(), name="file_upload"), #use
+    #path('Activity/db_upload/', DbUploadView.as_view(), name="db_upload"), #use
+    path('AudioActivity/CreateActivity/', CreateAudioActivityView.as_view(), name="create_audio_activity"),
+    path('AudioActivity/CreateActivity/bulk/', CreateAudioActivityView.as_view(), name="bulk_create_audio_activity"),
+    path('AudioActivity/Activity/', AudioActivityView.as_view(), name="audio_activity"),
+    path('AudioActivity/UpdateActivity/<pk>/', AudioActicityUpdateView.as_view(), name="audio_activity_update"),
+    path('Activity/CombinedActivitiesTest/', CombinedActivitiesTestView.as_view(), name="combined_activities_test"),
     #path('loginHome/', LoginView.as_view(redirect_authenticated_user=True, template_name='login.html'), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
 

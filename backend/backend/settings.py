@@ -20,7 +20,7 @@ QT_MULTI = False
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
+#DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
 
 # セッションは更新されてから10分でタイムアウトする。
 # SESSION_SAVE_EVERY_REQUEST = True でリクエストがあるごとにセッションは更新される
@@ -74,6 +74,7 @@ TENANT_APPS = (
 INSTALLED_APPS = [
     #'tenant_schemas',
     #'account',
+    'system',
     'activities.apps.ActivitiesConfig',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { getBothEnds } from "./utils"
+import { ShowPolicyContext } from '../Context';
 import Settings from "../Settings";
 
 import {
@@ -54,6 +55,8 @@ function TimeGraph(props){
 	
 	let td = new Date(props.target_date)	
 	
+	const ctx = useContext(ShowPolicyContext);
+
 	// 時間(duration)表示の場合、以下を設定する
 	//  ticks_callback : Y軸に表示する時間
 	//  y_stepSize : Y軸の単位
@@ -155,10 +158,15 @@ function TimeGraph(props){
 			let both_ends = getBothEnds(date, props.kind_of_period);		// OK
 			let d1 = both_ends[0];
 			let d2 = both_ends[1];
-			let params = {start : d1, end : d2, kind_of_period : props.kind_of_period, kind_of_value : props.kind_of_value}		// OK
+			let policy = ctx.policy
+			let params = {start : d1, end : d2, kind_of_period : props.kind_of_period, kind_of_value : props.kind_of_value, show_policy : policy}		// OK
 			let query = new URLSearchParams(params);
 
-			fetch(Settings.HOME_PATH+'/api/Activity/total_event_time_for_periodical/?'+ query,{
+			let target = Settings.HOME_PATH+'/api/Activity/total_event_time_for_periodical/?'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/total_event_time_for_periodical/?'
+			}
+			fetch(target+ query,{
 						credentials: "same-origin",
 					}
 			)

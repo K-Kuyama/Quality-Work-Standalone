@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { getBothEnds } from "./utils"
 import Settings from "../Settings";
+import { ShowPolicyContext } from '../Context';
 
 import {
   Chart as ChartJS,
@@ -23,6 +24,15 @@ ChartJS.register(
 );
 
 
+function createLabelSets(clist){
+	if (clist.length >0){
+		return createLabels(clist[0]['data_array']);
+	}
+	else{
+		return []
+	}
+}
+
 function createLabels(dlist){
 	let labels = [];
 	dlist.map((d) => {
@@ -34,7 +44,7 @@ function createLabels(dlist){
 function createData(dlist){
 	let data = [];
 	dlist.map((d) => {
-		data.push(d['duration'])
+		data.push(d['value'])
 	});
 	return data;
 }
@@ -42,6 +52,7 @@ function createData(dlist){
 function createDataSets(clist){
 	let datasets = [];
 	clist.map((cdata) =>{
+		//console.log(cdata);
 		datasets.push({labels:cdata['name'], backgroundColor:cdata['backgroundColor'], data: createData(cdata['data_array'])})		
 	})
 	return datasets;
@@ -49,11 +60,13 @@ function createDataSets(clist){
 
 function createGraphData(res, g_color){
 
-	let labels = createLabels(res[0]['data_array']);
+	let labels = createLabelSets(res);
+	// let labels = createLabels(res[0]['data_array']);
+	//console.log(labels);
 	let datasets = createDataSets(res);
-	//console.log("================")	
-
-	//console.log("================")	
+	//console.log("================");
+	//console.log(datasets);
+	//console.log("================");	
 
 	return {labels: labels, datasets: datasets,};
 }
@@ -64,6 +77,8 @@ function CategorizedTimeGraph(props){
 	const [haveData, setHaveData] = useState(false); 
 	const [g_data, setGData]=useState([]);
 	
+	const ctx = useContext(ShowPolicyContext)
+
 	var y_max = undefined;
 	var y_stepSize = undefined;
 	var ticks_callback = function(val){
@@ -163,10 +178,14 @@ function CategorizedTimeGraph(props){
 			let both_ends = getBothEnds(date, props.kind_of_period);		// OK
 			let d1 = both_ends[0];
 			let d2 = both_ends[1];
-			let params = {start : d1, end : d2, kind_of_period : props.kind_of_period, p_id: props.p_id[0]}		// OK
+			let policy = ctx.policy
+			let params = {start : d1, end : d2, kind_of_period : props.kind_of_period, p_id: props.p_id[0], show_policy : policy}		// OK
 			let query = new URLSearchParams(params);
-		
-			fetch(Settings.HOME_PATH+'/api/Activity/periodical_categories/?'+ query, {
+			let target = Settings.HOME_PATH+'/api/Activity/periodical_categories/?';
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/periodical_categories/?'
+			}
+			fetch(target+ query, {
 						credentials: "same-origin",
 					}
 			)
@@ -178,6 +197,7 @@ function CategorizedTimeGraph(props){
 				//console.log('---Success ---');
 				//console.log(txt);
 				let res = JSON.parse(txt);
+				//console.log(res);
 				let gd = createGraphData(res, g_color)
 				setGData(gd);
 				setHaveData(true);

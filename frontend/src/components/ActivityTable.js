@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Pagination from "./Pagination";
 import Activities from "./Activities";
 import { getBothEnds } from "./utils"
+import { ShowPolicyContext } from '../Context';
 //import Cookies from "universal-cookie";
 import Settings from "../Settings";
 
@@ -12,6 +13,8 @@ function ActivityTable(props){
 	const [target_date, setDate] = useState(props.target_date);
 	const [item, setItem] = useState(props.item);
 	
+	const ctx = useContext(ShowPolicyContext);
+
 	//console.log("-----------");	
 	//console.log("props");
 	//console.log(props.target_date);
@@ -36,18 +39,24 @@ function ActivityTable(props){
 			let both_ends = getBothEnds(date);
 			let d1 = both_ends[0];
 			let d2 = both_ends[1];
+			let policy = ctx.policy;
 			let params = {};
 			if(props.item ==="title_list"){ /* 画面タイトル一覧の場合 */
-				params = {start : d1, end : d2, pagination : 'True', merged_item: 'title', sorted_by: 'duration'};
+				params = {start : d1, end : d2, show_policy : policy, pagination : 'True', merged_item: 'title', sorted_by: 'duration'};
 			} else if(props.item === "app_list"){ /* アプリケーション一覧の場合 */
-				params = {start : d1, end : d2, pagination : 'True', merged_item: 'app', sorted_by: 'duration'};
+				params = {start : d1, end : d2, show_policy : policy, pagination : 'True', merged_item: 'app', sorted_by: 'duration'};
 			}else{　/* イベント一覧の場合 */
-				params = {start : d1, end : d2, pagination : 'True', sorted_by: 'time'};
+				params = {start : d1, end : d2, show_policy : policy, pagination : 'True', sorted_by: 'time'};
 			}
 			let query = new URLSearchParams(params);
 			//const cookies = new Cookies();
 			//const token = cookies.get('csrftoken')
-			fetch(Settings.HOME_PATH+'/api/Activity/merged_event/?'+ query,{
+			let target = Settings.HOME_PATH+'/api/Activity/merged_event/?'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/merged_event/?'
+			}
+			
+			fetch(target + query,{
 					credentials: "same-origin",
 				}
 			)

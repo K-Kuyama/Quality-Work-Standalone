@@ -5,7 +5,7 @@ Created on 2024/04/26
 '''
 
 from rest_framework import serializers
-from .models import Activity, Perspective, Category, CategorizedActivity, CategorizedKeyWord
+from .models import Activity, Perspective, Category, CategorizedActivity, CategorizedKeyWord, AudioActivity, SystemSettings
 from django.conf import settings
 from dateutil.tz import gettz
 
@@ -59,4 +59,29 @@ class ByHourSerializer(serializers.Serializer):
 class PeriodicalGraphSerializer(serializers.Serializer):
     index = serializers.CharField(max_length=2)
     value = serializers.IntegerField()
+
+
+# オーディオアクティビティリスト用のシリアライザ
+
+class CreateAudioActivityListSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        result = [AudioActivity(**attrs) for attrs in validated_data]
+        AudioActivity.objects.bulk_create(result)
+        return result
+
+class AudioActivitySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AudioActivity
+        #fields = ('start_time','end_time','duration','start_app','start_title',
+        #          'longest_app','longest_title','another_app','another_title')
+        fields = "__all__"
+        list_serializer_class = CreateAudioActivityListSerializer
     
+# システム設定用のシリアライザー
+
+class SystemSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SystemSettings
+        fields = "__all__"

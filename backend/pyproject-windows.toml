@@ -18,6 +18,8 @@ pynput = "^1.7.7"
 requests = "^2.32.3"
 pyinstaller = "^6.11.1"
 pywin32 = "^308"
+pyaudio = "^0.2.14"
+numpy = "^2.3.0"
 
 
 [build-system]

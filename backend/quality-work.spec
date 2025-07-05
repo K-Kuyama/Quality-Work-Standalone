@@ -6,6 +6,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
+        ('media/audio_settings.json','media'),
+        ('fixture.json','.'),
         ('frontend/*','frontend/'),
         ('frontend/static/css/*','frontend/static/css'),
         ('frontend/static/js/*','frontend/static/js'),

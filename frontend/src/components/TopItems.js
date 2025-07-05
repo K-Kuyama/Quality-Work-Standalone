@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { getBothEnds } from "./utils";
 import Settings from "../Settings";
+import { ShowPolicyContext } from '../Context';
 
 import {
     Chart as ChartJS,
@@ -25,8 +26,9 @@ import {
   function TopItems(props){
 
 	const [data, setData]= useState([]);
-	const [haveData, setHaveData] = useState(false); 
-	
+	const [haveData, setHaveData] = useState(false); 	
+	const ctx = useContext(ShowPolicyContext)
+
 	let g_color = 'rgba(53, 162, 235, 0.5)'
 	const item = props.item
 	//if(props.item == "app"){
@@ -61,9 +63,15 @@ import {
 			let both_ends = getBothEnds(date);
 			let d1 = both_ends[0];
 			let d2 = both_ends[1];
-			let params = {start : d1, end : d2,  merged_item: item, sorted_by: 'duration'};
+			let policy = ctx.policy
+			let params = {start : d1, end : d2, show_policy : policy, merged_item: item, sorted_by: 'duration'};
 			let query = new URLSearchParams(params);
-			fetch(Settings.HOME_PATH+'/api/Activity/merged_event/?'+ query,{
+
+			let target = Settings.HOME_PATH+'/api/Activity/merged_event/?'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/merged_event/?'
+			}
+			fetch(target + query,{
 					credentials: "same-origin",
 				}
 			)

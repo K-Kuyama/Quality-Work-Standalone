@@ -34,7 +34,11 @@ function SidebarDefEditor(props){
 		console.log(items);
 		const cookies = new Cookies();
 		const token = cookies.get('csrftoken')
-		fetch(Settings.HOME_PATH+'/api/user_def/perspective_editor/',
+		let target = Settings.HOME_PATH+'/api/user_def/perspective_editor/'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/perspective_editor/'
+		}
+		fetch(target,
 			{
 				method: "POST",
 				credentials: "same-origin",

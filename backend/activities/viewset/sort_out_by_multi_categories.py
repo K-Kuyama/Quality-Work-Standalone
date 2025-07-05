@@ -40,7 +40,7 @@ class SortOutByMutiCategoriesView(SortOutByCategoriesView):
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required))  
     def list(self, request, *args, **kwargs):
         self.evaluate_params()
-        queryset = self.get_queryset()
+        queryset = self.get_combined_queryset()
         # カテゴリー情報追加
         cserializer = self.getCSerializer(queryset, many=True, p_id=self.perspective)
         # カテゴリー別にグルーピング

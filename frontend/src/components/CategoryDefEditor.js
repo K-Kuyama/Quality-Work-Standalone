@@ -37,7 +37,11 @@ function CategoryDefEditor(props){
 		console.log(request_body);
 		let cookies = new Cookies();
 		let token = cookies.get('csrftoken')
-		fetch(Settings.HOME_PATH+"/api/user_def/Category/"+additional_str, {
+		let target = Settings.HOME_PATH+'/api/user_def/Category/'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/Category/'
+		}
+		fetch(target+additional_str, {
 			method : method_str,
 			credentials: "same-origin",
 			headers: {
@@ -58,36 +62,7 @@ function CategoryDefEditor(props){
 		})
 	}
 
-/*
-	const deleteCategory = (id) => {
-		fetch("http://127.0.0.1:8000/api/user_def/Category/"+id+"/", {
-			method : 'DELETE',
-			headers: {'Content-Type' : 'application/json',}	
-			}
-		)
-		.then(response => {
-			handleChangeCategory(0);	
-		})
-		.catch(error =>{
-			console.error(error);
-		})
 
-	
-	}
-
-
-	const setDeleteButton = ()=>{
-		if(props.c_id == '0'){
-
-			return(<></>);
-		}
-		else{
-			return(
-				<Button variant="primary" size="sm" style={{marginLeft: "20px"}} onClick={(e)=> deleteCategory(props.id)} > 削除 </Button>
-			)
-		}
-	}
-*/
 
 	return(
 

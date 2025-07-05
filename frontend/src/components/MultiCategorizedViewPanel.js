@@ -106,7 +106,11 @@ function MultiCategorizedViewPanel(props){
 	useEffect(() => {
 		// 初回の呼び出しでのみ、パースペクティブの一覧を取得する	
 		if(!haveData){
-			fetch(Settings.HOME_PATH+'/api/user_def/Perspective/',{
+			let target = Settings.HOME_PATH+'/api/user_def/Perspective/'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/Perspective/'
+			}			
+			fetch(target,{
 					credentials: "same-origin",
 				}
 			)

@@ -21,6 +21,12 @@
 	margin-right: 10px;
 }
 
+.top_app{
+    display: flex;
+	flex-direction: column;
+	background-color: #474963;
+}
+
 .app_page{
 	display: flex;
 	flex-direction: row;
@@ -863,8 +869,162 @@ input#perspective_color{
 	margin-right: 10px;
 }
 
-/*.   */
+/* AudioSettings.js */
 
+
+.audio_settings_panel{
+    display: flex;
+	flex-direction: row;
+	justify-content: center;
+    align-items: center;
+	width: 100%;
+    padding: 10px;
+    margin-right: 10px;
+    color:	rgba(255, 255, 255, 0.55);
+    background-color: #575977;
+}
+
+.audio_settings_panel>label{
+    margin: 10px;
+}
+
+.date_title{
+	padding-right: 30px;
+	/* color: #f0a0b5; */
+	color: rgba(255, 255, 255, 0.55); 
+	/* font-size: large; */
+}
+
+/* AudioActivityTag.js */
+
+.audio_list{
+    width: 100%;
+}
+
+.audio_activity_tag{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+    align-items: center;
+	width: 100%;
+    margin-bottom: 10px;
+    padding: 5px;
+    color:	rgba(255, 255, 255, 0.55);
+    background-color: #27293d;
+}
+
+.audio_time_column_t{
+    font-size: 10pt;
+    width: 25%;
+}
+.audio_duration_t{
+    font-size: 10pt;
+    width: 7%;
+}
+
+.audio_title_column_t{
+    font-size: 10pt;
+    width: 50%;
+}
+.audio_show_policy_t{
+    font-size: 10pt;
+    width: 10%;
+}
+.audio_save{
+    font-size: 10pt;
+    width: 8%;
+}
+
+.audio_time_column{
+    width: 25%;
+    font-size: 8pt;
+}
+
+.audio_duration{
+    width: 7%;
+    font-size: medium;
+}
+
+
+.audio_title_column{
+    width: 50%;
+    font-size: 8pt;
+}
+
+.audio_input_app{
+    width: 50pt;
+    margin-right: 5pt;
+    background-color:	rgba(255, 255, 255, 0.25);
+    border: 0;
+    border-color: #27293d;
+}
+
+.audio_input_title{
+    width: 300pt;
+    background-color:	rgba(255, 255, 255, 0.25);
+    border: 0;
+    border-color: #27293d;
+}
+
+.audio_show_policy{
+	display: flex;
+	flex-direction: column;
+	justify-content: start;
+    width: 10%;
+    font-size: 8pt;
+}
+
+.audio_save{
+    width: 8%;
+}
+
+
+/* SettingsEditor.js  */
+
+.settings-title{
+    color: #f0f0f0; 
+    font-size: 16pt;
+}
+
+.setting-text{
+    background-color:	var(--qt-candidate-color);
+    /* color: #27293d; */
+    color: #909090; 
+}
+
+.setting-text:disabled{
+    background-color:	#474963;
+    border: None;
+    /*border-color:  0px solid #474963; 
+    color: var(--qt-candidate-color); */
+}
+
+.setting-label{
+
+    color: #909090; 
+}
+
+/* DBSettings.js */
+
+.db_settings{
+    width: 90%;
+}
+
+
+.db-accordion{
+    --bs-accordion-bg: #575977; 
+    --bs-accordion-active-bg: #767ba9;    
+    --bs-accordion-border-color: #17192d;
+    --bs-accordion-btn-color: #fffafa;  
+
+}
+
+/*
+.db-accordion-header{
+    font-size: 1.0em;
+}
+
+   */
 
 
 .contents{
@@ -903,6 +1063,9 @@ input#perspective_color{
 	margin-top: 0.5rem;
 	margin-bottom: 0.5rem;
 }
+
+
+
 
 /*  */
 

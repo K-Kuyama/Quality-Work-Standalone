@@ -15,11 +15,19 @@ from rest_framework.permissions import IsAuthenticated
 
 from operator import attrgetter
 
-from .models import Activity
-from .serializer import ActivitySerializer, ByHourSerializer
+from .models import Activity, SystemSettings
+from .serializer import ActivitySerializer, ByHourSerializer, SystemSettingsSerializer
 #from .serializer import ActivitySerializer
 
 from django.conf import settings
+
+class SystemSettingsViewSet(viewsets.ModelViewSet):
+    queryset = SystemSettings.objects.all()
+    serializer_class = SystemSettingsSerializer
+    if settings.QT_MULTI:
+        # セッション認証ができている場合にアクセスを許可する
+        authentication_classes = (SessionAuthentication,)
+        permission_classes = (IsAuthenticated, )
 
 
 class ActivityViewSet(viewsets.ModelViewSet):

@@ -135,5 +135,16 @@
             "positive": true,
             "category": 6
         }
+    },
+    {
+        "model": "activities.systemsettings",
+        "pk": 1,
+        "fields":{
+            "role": "default",
+            "audio_activity_policy": 0,
+            "duration_threshold": 10,
+            "strokes_threshold": 10,
+            "distance_threshold": 1000
+        }
     }
 ]

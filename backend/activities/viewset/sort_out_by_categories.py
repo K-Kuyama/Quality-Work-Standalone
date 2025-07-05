@@ -7,6 +7,7 @@ Created on 2024/07/29
 from rest_framework.response import Response
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from datetime import datetime
 
 from .merged_event import MergedEventView
 from activities.serializers.categorized_activity_serializer import CategorizedActivitySerializer
@@ -25,6 +26,8 @@ def to_color_info_class(d) -> ColorInfo:
 def to_activity_class(d) -> Activity:
     a = Activity()
     a.__dict__.update(d)
+    # このままだとstart_timeの値は文字列になってしまうので、改めてdatetime型の値を設定する
+    a.start_time = datetime.strptime(d['start_time'], '%Y-%m-%dT%H:%M:%S.%f%z')
     return a
 
 class SortOutByCategoriesView(MergedEventView):
@@ -86,10 +89,11 @@ class SortOutByCategoriesView(MergedEventView):
 #            print(len(c_obj.activities))
             for ac in c_obj.activities:
                 duration += ac.duration
-                distance_x += ac.distance_x
-                distance_y += ac.distance_y
-                strokes += ac.strokes
-                scrolls += ac.scrolls
+                if ac.distance_x: #audioからのアクションはここがNoneになっているので除外
+                    distance_x += ac.distance_x
+                    distance_y += ac.distance_y
+                    strokes += ac.strokes
+                    scrolls += ac.scrolls
                 
 #            print(f"duration ->{duration}")
             tac = CActivity(None,duration, distance_x, distance_y, strokes, scrolls, None, None)
@@ -117,7 +121,7 @@ class SortOutByCategoriesView(MergedEventView):
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required))          
     def list(self, request, *args, **kwargs):
         self.evaluate_params()
-        queryset = self.get_queryset()
+        queryset = self.get_combined_queryset()
         # カテゴリー情報追加
 #        cserializer = self.getCSerializer(queryset, many=True, p_id=self.request.query_params.get('p_id'))
         cserializer = self.getCSerializer(queryset, many=True, p_id=self.perspective)

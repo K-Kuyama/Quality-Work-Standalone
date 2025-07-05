@@ -23,7 +23,11 @@ function PerspectiveEditor(props){
 		//console.log(" p_id set .........")
 		//console.log(p_id)
 		if(props.p_id != 0){
-			fetch(Settings.HOME_PATH+'/api/user_def/_Perspective/'+ props.p_id +'/',{
+			let target = Settings.HOME_PATH+'/api/user_def/_Perspective/'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/_Perspective/'
+			}		
+			fetch(target+ props.p_id +'/',{
 					credentials: "same-origin",
 				}
 			)

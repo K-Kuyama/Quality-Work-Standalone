@@ -19,6 +19,8 @@ from django.conf import settings
 
 from activities.models import Activity
 from activities.serializer import  PeriodicalGraphSerializer
+from .mixins import CreateIndexMixin
+from .merged_event import MergedEventView
 
 from django.conf import settings
 from activities.decolators import attach_decorator
@@ -29,7 +31,7 @@ from django.conf import settings
 
 
 # 指定された日の、時間ごとの合計作業時間を出力する
-class TotalEventTimeForPeriodicalGraph(generics.ListAPIView):
+class TotalEventTimeForPeriodicalGraph(MergedEventView, CreateIndexMixin):
     format_str = "%Y-%m-%d %H:%M:%S.%f"
     serializer_class = PeriodicalGraphSerializer
     kind_of_period = ""     # パラメータとしてクライアントから送られてくるグラフの種別 (day, week, month, yearのいずれか)
@@ -56,11 +58,19 @@ class TotalEventTimeForPeriodicalGraph(generics.ListAPIView):
             self.time_strings = "hour"
             
         if 'kind_of_value' in params:
-            self.kind_of_value = params.get('kind_of_value').lower()
-        else:
-            self.kind_of_value = 'duration'
+            if params.get('kind_of_value').lower() == 'duration':
+                self.kind_of_value = self.DURATION
+            elif params.get('kind_of_value').lower() == 'strokes':
+                self.kind_of_value = self.STROKES
+            elif params.get('kind_of_value').lower() == 'scrolls':
+                self.kind_of_value = self.SCROLLS
+            elif params.get('kind_of_value').lower() == 'distance':
+                self.kind_of_value = self.DISTANCE
+            else:
+                self.kind_of_value = self.DURATION    
 
     # 単位時間ごとの作業時間（単位：秒）をデータモデルから取得する
+    # CreateIndexMixin導入に伴い使わなくなっているので、折を見て削除
     def get_queryset(self):
         st_str = self.request.query_params.get("start")
         end_str = self.request.query_params.get("end")
@@ -181,19 +191,13 @@ class TotalEventTimeForPeriodicalGraph(generics.ListAPIView):
             """ 
 
         
-        #print("query strings --------")
-        #print(query_str)
 
         st_str = self.request.query_params.get("start")
         end_str = self.request.query_params.get("end")
-        #print(f"st_str:{st_str}")
-        #print(f"end_str:{end_str}")
-#        subq = Activity.objects.raw(query_str,[st_str,end_str]).query
         subq = Activity.objects.raw(query_str,[st_str,end_str])
-#        subq = Activity.objects.raw(query_str, [st_str,])
-#        print(subq.query)
         return subq
 
+    # CreateIndexMixin導入に伴い使わなくなっているので、折を見て削除
     def createResultData(self, query_set, sub_query_set):
         n_of_index = 0
         str_index = 0
@@ -219,7 +223,7 @@ class TotalEventTimeForPeriodicalGraph(generics.ListAPIView):
         if self.kind_of_period == "week":
             index_day = self.start_datetime
             for p in range(n_of_index):
-                print(f"p:{p} - index_day:{index_day}")
+                #print(f"p:{p} - index_day:{index_day}")
                 hourly_data.append({'index':str(index_day.day).zfill(2)+f" ({index_day.strftime('%a')})", 'value':0})
                 index_day = index_day + timedelta(days=1)
             #print("----------")
@@ -231,30 +235,19 @@ class TotalEventTimeForPeriodicalGraph(generics.ListAPIView):
             
         # 単位時間ごとの作業秒数を入力する
         for d in query_set:   
-            #print(f"obj:{d}")
             index = 0
             if self.kind_of_period == "week":
                 dt = d['date_time']
                 # JavaScriptのweekdayの数値表現に合わせる。日曜日が0になるようにする。
                 index = date(dt.year, dt.month, dt.day).isoweekday()%7
-#                index = calendar.weekday(dt.year, dt.month, dt.day)
             else:
                 date_time = str(d['date_time'])
                 index = int(date_time[str_index:str_index+2])
-            #print(f"index:{index}")
             hourly_data[index-adjust]['value'] += int(d['total'])
 
-        #print("initial data")        
-        #for d in hourly_data:
-        #    print(d)
-
-        #for d in sub_query_set:
-        #    print(d.__dict__)
-        #    print(f"id:{d.id}, index:{d.dt_index}, start_time:{d.start_time},end_time:{d.end_time}, duration:{d.duration}")    
+        
         # 正時、日、月またがりのイベントの作業時間の割り振りを計算し、補正をかける
         for d in sub_query_set:
-            #print(f"id:{d.id}, start_time:{d.start_time}, roundedTime:{d.roundedTime},end_time:{d.end_time}, duration:{d.duration}")
-            #print(d.roundedTime, d.start_time)
             #roundedTimeは文字列型なので変換が必要(SQLiteの場合)
             #SQL文で指定したroundedTimeはオブジェクト化した時に大文字が小文字に変換されroundedtimeとなる(POSTGRESQLの場合)
             if settings.USE_POSTGRESQL:
@@ -272,7 +265,7 @@ class TotalEventTimeForPeriodicalGraph(generics.ListAPIView):
                 index = int(d.dt_index)-1
             else:
                 index = int(d.dt_index)
-            #print(f"index {index}, value {after}")
+            print(f"index {index}, befor {before}, after {after}")
             if index >0:
                 hourly_data[index-1]['value'] -= after
             if index<n_of_index:
@@ -280,17 +273,13 @@ class TotalEventTimeForPeriodicalGraph(generics.ListAPIView):
                 
         return hourly_data
  
-          
+         
     #　generics.ListAPIViewのas_view()から呼び出されるメソッドを上書き
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required))             
     def list(self, request, *args, **kwargs):
         self.evaluate_params()
-        queryset = self.get_queryset()
-        sub_queryset = self.get_subquery()
-    
-        hl = self.createResultData(queryset,sub_queryset)
-        #for h in hl:
-        #    print(f"{h['index']} : {h['value']}")
+        queryset = self.get_combined_queryset()
+        hl = self.createIndexData(queryset)
 
         serializer = self.get_serializer(hl, many=True)
         return Response(serializer.data)

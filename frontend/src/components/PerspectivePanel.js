@@ -36,7 +36,11 @@ function PerspectivePanel(props){
 
 	/* propsに変更があった時に呼び出される */
 	useEffect(() => {
-		fetch(Settings.HOME_PATH+'/api/user_def/Perspective/',{
+		let target = Settings.HOME_PATH+'/api/user_def/Perspective/'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/Perspective/'
+		}			
+		fetch(target,{
 					credentials: "same-origin",
 				}
 		)

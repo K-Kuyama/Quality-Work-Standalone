@@ -62,22 +62,7 @@ class FileUploadView(generics.ListCreateAPIView):
         fh = FileUpdateHistory.objects.get(id=serializer.instance.id)
         fh.status = "imported (skip "+str(skips)+" rows)"
         fh.save()
-        
-        '''
-        try:
-            with transaction.atomic():
-                for ac in activities:
-                    activity = self.createActivity(ac)
-                    activity.save()
-        except IntegrityError:
-            print(f" Data import error :{f_name}")
-        else:
-            print(f"Data import success :{f_name}")
-            # データ書き込みが正常に終わった場合、ステータスを"imported"にアップデート
-            fh = FileUpdateHistory.objects.get(id=serializer.instance.id)
-            fh.status = "imported"
-            fh.save()
-        '''    
+
         headers = self.get_success_headers(serializer.data)
         #print(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

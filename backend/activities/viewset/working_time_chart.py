@@ -13,7 +13,7 @@ from django.conf import settings
 from activities.decolators import attach_decorator
 from activities.serializers.working_time_serializer import WorkingTimeSerializer
 from activities.modules.perspective_model import ModelCreator
-
+from activities.modules.combined_activities import get_combined_activities
 
 class WorkingTime:
     def __init__(self, title, color, start_time, end_time):
@@ -35,7 +35,15 @@ class WorkingTimeChartView(generics.ListAPIView):
         #print(end_str)
         return Activity.objects.filter(start_time__gte=datetime.strptime(st_str, self.format_str),
                                        start_time__lte=datetime.strptime(end_str, self.format_str))
-    
+
+    def get_combined_queryset(self):
+        st_str = self.request.query_params.get("start")
+        end_str = self.request.query_params.get("end")
+        show_policy = 0
+        if 'show_policy' in self.request.query_params:
+            show_policy = int(self.request.query_params.get("show_policy"))
+        return get_combined_activities(datetime.strptime(st_str, self.format_str), 
+                                       datetime.strptime(end_str, self.format_str), show_policy)    
 
     def createWorkingTime(self, queryset):
         s_time = None
@@ -76,7 +84,7 @@ class WorkingTimeChartView(generics.ListAPIView):
         params = self.request.query_params
         if params.get('p_id'):
             self.p_id = int(params.get('p_id'))
-        queryset = self.get_queryset()
+        queryset = self.get_combined_queryset()
         if self.p_id:
             wl = self.createDetailedWorkingTime(queryset)
         else:

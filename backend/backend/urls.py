@@ -63,11 +63,14 @@ if settings.QT_MULTI:
         path('categorize', index_view, name='index'), 
         path('multi_categorize', index_view, name='index'), 
         path('editor', index_view, name='index'), 
-        path('data_and_files', index_view, name='index'),    
+        path('audios', index_view, name='index'), 
+        path('settings', index_view, name='index'), 
+        #path('data_and_files', index_view, name='index'),    
     ]
 else:
     urlpatterns = [
         path('admin/', admin.site.urls),
+        path('system/', include("system.urls")),
         path('api/', include("activities.urls")),
         path('', index_view, name='index'),
         path('dashboard', index_view, name='index'),
@@ -80,7 +83,9 @@ else:
         path('categorize', index_view, name='index'), 
         path('multi_categorize', index_view, name='index'), 
         path('editor', index_view, name='index'), 
-        path('data_and_files', index_view, name='index'),    
+        path('audios', index_view, name='index'), 
+        path('settings', index_view, name='index'), 
+        #path('data_and_files', index_view, name='index'),    
     ]
 
 

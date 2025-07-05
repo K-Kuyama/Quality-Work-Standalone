@@ -51,7 +51,11 @@ function CategoryPane3(props){
 	useEffect(() =>{
 		if(props.category.id != 0){
 			let query = new URLSearchParams({category_id : props.category.id});
-			fetch(Settings.HOME_PATH+'/api/user_def/candidate_words/?'+ query,{
+			let target = Settings.HOME_PATH+'/api/user_def/candidate_words/?'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/candidate_words/?'
+			}
+			fetch(target + query,{
 					credentials: "same-origin",
 				}
 			)
@@ -82,7 +86,11 @@ function CategoryPane3(props){
 		let request_body = {category: props.category.id , word: title, positive: flag}
 		let cookies = new Cookies();
 		let token = cookies.get('csrftoken')
-		fetch(Settings.HOME_PATH+"/api/user_def/CategorizedKeyword/", {
+		let target = Settings.HOME_PATH+'/api/user_def/CategorizedKeyword/'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/CategorizedKeyword/'
+		}
+		fetch(target, {
 			method : "POST",
 			credentials: "same-origin",
 			headers: {
@@ -110,7 +118,11 @@ function CategoryPane3(props){
 		// キーワードをデータベースから消去する
 		let cookies = new Cookies();
 		let token = cookies.get('csrftoken')
-		fetch(Settings.HOME_PATH+"/api/user_def/CategorizedKeyword/"+id+"/", {
+		let target = Settings.HOME_PATH+'/api/user_def/CategorizedKeyword/'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/CategorizedKeyword/'
+		}
+		fetch(target+id+"/", {
 			method : 'DELETE',
 			credentials: "same-origin",
 			headers: {
@@ -152,7 +164,11 @@ function CategoryPane3(props){
 		//カテゴリーのデータベースからの削除
 		let cookies = new Cookies();
 		let token = cookies.get('csrftoken')
-		fetch(Settings.HOME_PATH+"/api/user_def/Category/"+id+"/", {
+		let target = Settings.HOME_PATH+'/api/user_def/Category/'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/user_def/Category/'
+		}
+		fetch(target+id+"/", {
 			method : 'DELETE',
 			credentials: "same-origin",
 			headers: {

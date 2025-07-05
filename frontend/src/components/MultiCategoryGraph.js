@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { getBothEnds } from "./utils"
-
+import { ShowPolicyContext } from '../Context';
 import {ArcElement, Chart as ChartJS, Legend, Tooltip} from 'chart.js'
 import {Doughnut, Pie} from 'react-chartjs-2'
 import Settings from "../Settings";
@@ -53,7 +53,8 @@ function MultiCategoryGraph(props){
 
 	const [haveData, setHaveData] = useState(false); 
 	const [g_data, setGData]=useState([]);
-	
+	const ctx = useContext(ShowPolicyContext)
+
 	const options ={
 		plugins:{
 			tooltip:{
@@ -102,10 +103,14 @@ function MultiCategoryGraph(props){
 			let both_ends = getBothEnds(props.target_date, "day");		
 			let d1 = both_ends[0];
 			let d2 = both_ends[1];
-			let params = {start : d1, end : d2, p_id: props.p_id[0], sub_p_id:props.sub_p_id[0], summarize: true }	
+			let policy = ctx.policy
+			let params = {start : d1, end : d2, show_policy : policy, p_id: props.p_id[0], sub_p_id:props.sub_p_id[0], summarize: true }	
 			let query = new URLSearchParams(params);
-		
-			fetch(Settings.HOME_PATH+'/api/Activity/sort_out_by_multi_categories/?'+ query,{
+			let target = Settings.HOME_PATH+'/api/Activity/sort_out_by_multi_categories/?'
+			if(Settings.DEVELOP){
+				target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/sort_out_by_multi_categories/?'
+			}
+			fetch(target + query,{
 						credentials: "same-origin",
 					}
 			)

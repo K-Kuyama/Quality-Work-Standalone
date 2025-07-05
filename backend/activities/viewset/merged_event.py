@@ -13,6 +13,7 @@ from operator import attrgetter
 
 from activities.models import Activity
 from activities.serializer import FormattedActivitySerializer
+from activities.modules.combined_activities import get_combined_activities
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -54,6 +55,8 @@ class MergedEventView(generics.ListAPIView):
     duration_sort = False
     time_sort = False
     need_pagination = False
+
+    start_datetime = None
         
 
     def evaluate_params(self):
@@ -87,6 +90,16 @@ class MergedEventView(generics.ListAPIView):
         return Activity.objects.filter(start_time__gte=datetime.strptime(st_str, self.format_str),
                                        start_time__lte=datetime.strptime(end_str, self.format_str)).exclude(title="blank")
 
+    def get_combined_queryset(self):
+        st_str = self.request.query_params.get("start")
+        end_str = self.request.query_params.get("end")
+        self.start_datetime = datetime.strptime(st_str, self.format_str)
+        show_policy = 0
+        if 'show_policy' in self.request.query_params:
+            show_policy = int(self.request.query_params.get("show_policy"))
+        return get_combined_activities(datetime.strptime(st_str, self.format_str), 
+                                       datetime.strptime(end_str, self.format_str), show_policy)
+
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required)) 
     def list(self, request, *args, **kwargs):
         #print(request.headers)
@@ -96,7 +109,7 @@ class MergedEventView(generics.ListAPIView):
         #print(request.user)
         #print("----------------")
         self.evaluate_params()
-        queryset = self.get_queryset()
+        queryset = self.get_combined_queryset()
         if self.need_merge:
             merged_activities = self.merge_activity(queryset)
         else:
@@ -183,10 +196,11 @@ class MergedEventView(generics.ListAPIView):
                 scrolls = 0
                 for obj in td[key]:
                     duration += obj.duration
-                    distance_x += obj.distance_x
-                    distance_y += obj.distance_y
-                    strokes += obj.strokes
-                    scrolls += obj.scrolls
+                    if obj.distance_x:
+                        distance_x += obj.distance_x
+                        distance_y += obj.distance_y
+                        strokes += obj.strokes
+                        scrolls += obj.scrolls
                 act = Activity()
                 act.start_time = None
                 act.duration = duration

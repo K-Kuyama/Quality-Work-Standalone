@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Button from 'react-bootstrap/Button';
+import { ShowPolicyContext } from '../Context';
 import {getOptions, createData} from './TimeChart';
 
 //import { ja } from "date-fns/locale";
@@ -44,6 +45,8 @@ function TimeChartOption(props){
     const [range, setRange] = useState([]);
     const [g_data, setData] = useState(undefined);
 
+    const ctx = useContext(ShowPolicyContext);
+
     const getRange = (fromTo) =>{
         console.log(fromTo);
         let from = new Date(fromTo[0]);
@@ -65,10 +68,15 @@ function TimeChartOption(props){
         let range = getRange(props.from_to);
         //console.log("range",range);
         setRange(range);
-        let params = {start : range[0], end : range[1], p_id : props.p_id};
+        let policy = ctx.policy
+        let params = {start : range[0], end : range[1], p_id : props.p_id, show_policy : policy};
 
         let query = new URLSearchParams(params);
-        fetch(Settings.HOME_PATH+'/api/Activity/working_time_chart/?'+ query	
+        let target = Settings.HOME_PATH+'/api/Activity/working_time_chart/?'
+        if(Settings.DEVELOP){
+            target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/working_time_chart/?'
+        }
+        fetch(target + query	
         )
         .then(response => {
             return response.json();

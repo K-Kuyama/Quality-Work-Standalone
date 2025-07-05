@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 # Create your models here.
 class Activity(models.Model):
@@ -53,5 +54,37 @@ class FileUpdateHistory(models.Model):
     dataCount = models.IntegerField()
     status = models.CharField(max_length=128)
     
+# 音声イベントデータ
+# selected 0:start  1:longest  2: another
 
-    
+class AudioActivity(models.Model):
+    start_time = models.DateTimeField(unique=True)
+    end_time = models.DateTimeField(unique=True)
+    duration = models.IntegerField()
+    start_app = models.CharField(max_length=128)
+    start_title = models.CharField(max_length=256)
+    longest_app = models.CharField(max_length=128, null=True)
+    longest_title = models.CharField(max_length=256, null=True)
+    another_app = models.CharField(max_length=128, default = None, null=True)
+    another_title = models.CharField(max_length=256, default = None, null=True)
+    selected = models.IntegerField(default = 0,
+                                validators=[MinValueValidator(0),
+                                MaxValueValidator(2)])
+    #show_front = models.BooleanField(default=True)
+    show_policy = models.IntegerField(default = 0,
+                                validators=[MinValueValidator(0),
+                                MaxValueValidator(2)])
+
+
+# システム設定データ
+# audio_activity_policy  0:無効 1:Audio優先 2:Window優先 3:個別設定
+
+class SystemSettings(models.Model):
+    role = models.CharField(max_length=32, default="default")
+    audio_activity_policy = models.IntegerField(default=0,
+                                validators=[MinValueValidator(0),
+                                MaxValueValidator(3)])
+    duration_threshold = models.IntegerField(default=10)
+    strokes_threshold = models.IntegerField(default=10)
+    distance_threshold = models.IntegerField(default=1000)
+
