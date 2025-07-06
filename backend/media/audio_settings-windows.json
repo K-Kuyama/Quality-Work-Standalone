@@ -1,0 +1,13 @@
+{
+    "Poll_time": 0.2,
+    "Loop_back_device": "VB-Audio",
+    "Host_api": "Windows WASAPI",
+    "FORMAT": "pyaudio.paInt16",
+    "CHANNELS": 1,
+    "RATE": 48000,
+    "CHUNK": 1024,
+    "Silence_threshold": 10,
+    "Start_frame_threshold": 5,
+    "End_frame_threshold": 30,
+    "RETRY_INTERVAL": 30
+}
