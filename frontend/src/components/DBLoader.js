@@ -30,7 +30,7 @@ function DBLoader(props) {
     const [db_info, setDBInfo] = useState([]);   //ソース側ファイルの内容
     const [result_info, setResult] =useState([]);  //テーブルのmigration結果
     const [target_file, setFile] = useState([]);  //選択されたソースDBファイル
-    const [db_file_path, setDBPath] = useState(""); //アップロードされたソースDBファイルのパス
+    const [db_file_path, setDBPath] = useState(null); //アップロードされたソースDBファイルのパス
     const [f_id, setFId] = useState(null); //アップロードされたファイルエントリーのID
     const [query_list, setQueryList] = useState([]); //migrateするテーブルのリスト情報
     const [processing, setProcessing] = useState(false); //スピナーの表示状態
@@ -39,8 +39,8 @@ function DBLoader(props) {
         // Do something with the files
         //console.log('acceptedFiles:', acceptedFiles);
         let file = acceptedFiles[0];
-        setFile(file);
         uploadFile(file);
+        setFile(file);
     }, []);
     
     const { getRootProps, getInputProps, isDragActive, open, acceptedFiles } = useDropzone({
@@ -129,7 +129,7 @@ function DBLoader(props) {
 
 
     const getDBInfo = (target_file) =>{
-        console.log(target_file);
+        //console.log("getDBInfo", target_file);
         let params = {file: target_file};
         let query = new URLSearchParams(params);
         let target = Settings.HOME_PATH+'/system/dbinfo/?'
@@ -161,7 +161,7 @@ function DBLoader(props) {
 
     const cancelFile = (e) =>{
         //アップロードしたファイルと関連する情報を消去する
-        console.log(db_file_path, f_id);
+        //console.log("cancelFIle",db_file_path, f_id);
         let params = {f_path: db_file_path};
         let query = new URLSearchParams(params);
         let cookies = new Cookies();
@@ -170,25 +170,60 @@ function DBLoader(props) {
         if(Settings.DEVELOP){
             target = Settings.DEVELOPMENT_HOME_PATH+'/system/UpdateHistory/'
         }
-        fetch(target+f_id+"/?"+query,
-			{
-				method: "DELETE",
-				credentials: "same-origin",
-				headers: {
-					'Content-Type' : 'application/json',
-					'X-CSRFToken': token,
-				},
-			}
-		)
-		.then(response => {
-			setVisibility(false);
-		})
-		.catch(error =>{
-			console.error('----Error---');
-			console.error(error);
-		})
+        if(f_id != null){
+            fetch(target+f_id+"/?"+query,
+                {
+                    method: "DELETE",
+                    credentials: "same-origin",
+                    headers: {
+                        'Content-Type' : 'application/json',
+                        'X-CSRFToken': token,
+                    },
+                }
+            )
+            .then(response => {
+                setVisibility(false);
+                setDBPath(null);
+                setDBInfo([])
+                setFId(null);
+            })
+            .catch(error =>{
+                console.error('----Error---');
+                console.error(error);
+            })
+        }
     }
 
+
+    const clearFile = () =>{
+        // アップロードしたファイル情報を全てクリアする
+        let cookies = new Cookies();
+        let token = cookies.get('csrftoken')
+        let target = Settings.HOME_PATH+'/system/history_clear/'
+        if(Settings.DEVELOP){
+            target = Settings.DEVELOPMENT_HOME_PATH+'/system/history_clear/'
+        }
+        fetch(target,
+            {
+                credentials: "same-origin",
+                headers: {
+                    'Content-Type' : 'application/json',
+                    'X-CSRFToken': token,
+                },
+            }
+        )
+        .then(response => {
+            setVisibility(false);
+            setDBPath(null);
+            setDBInfo([])
+            setFId(null);
+        })
+        .catch(error =>{
+            console.error('----Error---');
+            console.error(error);
+        })
+        
+    }
 
     const migrateData = (e) =>{
         let ilist = document.querySelectorAll("input[name=db_table]:checked")
@@ -255,7 +290,7 @@ function DBLoader(props) {
     useEffect(() =>{
         // uploadFile()によってDBファイルがアップロードされた後、そのファイルパスを
         // 指定してDBファイルの内容に関する情報を取得する
-        if(db_file_path){
+        if(db_file_path != null){
             getDBInfo(db_file_path);
         }
     },[db_file_path])
@@ -270,13 +305,11 @@ function DBLoader(props) {
     },[query_list])
 
     useEffect(()=>{
+        clearFile();
         return()=>{
-            //console.log("unmount", f_id, db_file_path);
-            if (f_id != null){
-                cancelFile();
-            }
+            clearFile();
         }
-    },[f_id, db_file_path])
+    },[])
 
     return (
     	<div className="file_drop_area">

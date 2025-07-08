@@ -44,6 +44,7 @@ class DatabaseUploadView(generics.ListCreateAPIView):
         # データベースに格納されているファイルのURLをファイルパスに変換する
         MEDIA_ROOT = getattr(settings, "MEDIA_ROOT", None)
         MEDIA_URL = getattr(settings, "MEDIA_URL", None)
+        #print(f"re.search({MEDIA_URL},{url_str})")
         ro = re.search(MEDIA_URL, url_str)
         t_str = url_str[ro.span()[1]:]
         file_str = os.path.join(MEDIA_ROOT, t_str)
@@ -60,7 +61,7 @@ class DatabaseUploadView(generics.ListCreateAPIView):
         return serializer_class(*args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        print("post method called")
+        #print("post method called")
         return self.create(request, *args, **kwargs)
     
     
@@ -102,6 +103,30 @@ class DBUpdateHistoryViewSet(viewsets.ModelViewSet):
         if file_path:
             os.remove(file_path)
 
+class DBUpdateHistoryClearView(generics.ListAPIView):
+    # DBアップデートテーブルにあるエントリーを全てクリアする
+    queryset = DBUpdateHistory.objects.all()
+
+    def urlToFile(self, url_str):
+        # データベースに格納されているファイルのURLをファイルパスに変換する
+        MEDIA_ROOT = getattr(settings, "MEDIA_ROOT", None)
+        MEDIA_URL = getattr(settings, "MEDIA_URL", None)
+        ro = re.search(MEDIA_URL, url_str)
+        t_str = url_str[ro.span()[1]:]
+        file_str = os.path.join(MEDIA_ROOT, t_str)
+        return file_str
+
+    @attach_decorator(settings.QT_MULTI,method_decorator(login_required)) 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        for entry in queryset:
+            file_path = self.urlToFile(entry.contents.url)
+            # アップロードされているファイルを消去
+            if file_path:
+                os.remove(file_path)
+        # エントリーを全て消去
+        DBUpdateHistory.objects.all().delete()
+        return Response([])
 
 # DatabaseInfoViewのためのSerializer
 class DatabaseInfoSerializer(serializers.Serializer):
@@ -120,7 +145,7 @@ class DatabaseInfoView(generics.ListAPIView):
     def evaluate_params(self):
         params = self.request.query_params
         if 'file' in params:
-            file = params.get('file')
+            self.file = params.get('file')
 
     def getTableName(self, target):
         target_list = target.split(".")
@@ -139,10 +164,9 @@ class DatabaseInfoView(generics.ListAPIView):
             cur = conn.cursor()
             for table in tables:
                 table_name = self.getTableName(table[0])
-                select_sql = "SELECT count(id) FROM "+table_name
+                select_sql = "SELECT count(*) FROM "+table_name
                 cur.execute(select_sql)
                 count = cur.fetchone()
-                #print(f"SQL result : {count}")
                 results.append({"name": table[0], "count": count[0], 
                                 "parents": table[1], "children": table[2], "replace": table[3]})
         except sqlite3.Error as e:
