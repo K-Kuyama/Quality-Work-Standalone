@@ -41,6 +41,7 @@ class InputValueModel():
         self.zappingColor = "#7fffff"
         self.creationColor = "#7f7fff"
         self.infoGatheringColor = "#7fbfff"
+        self.audioStreamColor = "#ffd700"
     
         self.duration_threshold = 10
         self.strokes_threshold = 10
@@ -51,6 +52,12 @@ class InputValueModel():
         c_info = dict()
         c_info['stringColor'] = "#d8469b"
         c_info['eventId'] = None
+        if(obj.app == "audio_stream"):
+            c_info['backgroundColor'] = self.audioStreamColor
+            c_info['categoryName'] = "オーディオストリーム"
+            c_info['categoryId'] = 22
+            return c_info
+        
         distance = (obj.distance_x**2 + obj.distance_y**2)**0.5
         if(obj.duration < self.duration_threshold):
             if(obj.strokes < self.strokes_threshold and distance < self.distance_threshold):
