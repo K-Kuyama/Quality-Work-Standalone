@@ -18,12 +18,14 @@ class Perspective(models.Model):
     name = models.CharField(max_length=128)
     color = models.CharField(max_length=128)
     use_def_color= models.BooleanField()
+    index = models.IntegerField(validators=[MinValueValidator(0)], null=True)   #2025.09.21 表示順序設定のため追加
     categorize_model = models.CharField(max_length=128, null=True)
     
 class Category(models.Model):
     perspective = models.ForeignKey(Perspective, on_delete=models.CASCADE, related_name="categories")
     name = models.CharField(max_length=128)
     color = models.CharField(max_length=128)
+    index = models.IntegerField(validators=[MinValueValidator(0)], null=True)   #2025.09.21 表示順序設定のため追加
     
 class CategorizedActivity(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="activities")
@@ -74,6 +76,28 @@ class AudioActivity(models.Model):
     show_policy = models.IntegerField(default = 0,
                                 validators=[MinValueValidator(0),
                                 MaxValueValidator(2)])
+
+
+# 以下AI関連データ
+
+class ActivityPredictor(models.Model):
+    p_id = models.IntegerField()
+    name = models.CharField(max_length=128, null=True)
+    created_dtime = models.DateTimeField()
+    data_start = models.DateTimeField(null=True)
+    data_end = models.DateTimeField(null=True)
+    num_of_labels = models.IntegerField()
+    num_of_learning_data = models.IntegerField()
+    score = models.CharField(max_length=4096, null=True)
+    using = models.BooleanField()
+
+# 評価用データを作るためのカテゴライズ済みアクティビティリスト
+
+class CategorizedActivityEval(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="eval_activities")
+    app = models.CharField(max_length=128)
+    title = models.CharField(max_length=256)
+
 
 
 # システム設定データ

@@ -73,8 +73,8 @@ class CreateIndexMixin:
                 index += 1
                 
                 while index < n_of_index:
-                    print(f"index :{index}")
-                    print(f"after={after}, interval={interval}")
+                    #print(f"index :{index}")
+                    #print(f"after={after}, interval={interval}")
                     if after < interval:
                         category_index_data[index]['value'] += after
                         break

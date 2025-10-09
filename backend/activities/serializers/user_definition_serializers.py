@@ -17,7 +17,7 @@ class CreatePerspectiveListSerializer(serializers.ListSerializer):
 class PerspectiveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perspective
-        fields = ('id', 'name', 'color','use_def_color', 'categorize_model')
+        fields = ('id', 'name', 'color','use_def_color', 'index', 'categorize_model')
         list_serializer_class = CreatePerspectiveListSerializer
         
 
@@ -37,7 +37,7 @@ class CategorySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Category
-        fields = ('id', 'perspective', 'name', 'color')
+        fields = ('id', 'perspective', 'name', 'color', 'index')
         list_serializer_class = CreateCategoryListSerializer       
  
 
@@ -87,7 +87,7 @@ class _CategorySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Category
-        fields = ('id', 'perspective', 'name', 'color', 'activities', 'key_words')
+        fields = ('id', 'perspective', 'name', 'color', 'index', 'activities', 'key_words')
         list_serializer_class = CreateCategoryListSerializer    
 
 
@@ -98,5 +98,5 @@ class _PerspectiveSerializer(serializers.ModelSerializer):
  
     class Meta:
         model = Perspective
-        fields = ['id', 'name', 'color','use_def_color', 'categories',]
+        fields = ['id', 'name', 'color','use_def_color', 'index', 'categorize_model','categories',]
         

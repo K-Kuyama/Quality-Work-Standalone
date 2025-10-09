@@ -16,16 +16,11 @@ function PerspectivePanel(props){
 	const handleClose = () => setShow(false);
 	const handleShow = () => setShow(true);
 
-//	const checkPid = () =>{
-//		if (!data.some(item => item['id'] == props.get_handler())){
-//			setParam(0)
-//		}
-//	}
 
 	const getInitialPid = (data) =>{
 		let pid = 0;
 		for(let p of data){
-			if(p['categorize_model']==null){
+			if(p['categorize_model']!='InputValueModel'){
 				pid = p['id'];
 				break;
 			}
@@ -49,8 +44,6 @@ function PerspectivePanel(props){
 		})
 		.then(result =>{
 			const txt = JSON.stringify(result, null,' ');
-			//console.log('---Success ---');
-			//console.log(txt);
 			let res = JSON.parse(txt);
 			setData(res);
 			if(!haveData){
@@ -86,7 +79,7 @@ function PerspectivePanel(props){
 					</div>
     				<div className="d-grid gap-2">
     					{data.map((obj) =>{
-    						if(obj['categorize_model']==null){
+    						if(obj['categorize_model']=="InputValueModel"){
     							return(
     								<Button type="button" class="btn btn-light" data-bs-toggle="button" variant="light" size="sm" 
     									value={obj['id']} onClick={(e) => setParam(e.target.value)}>
@@ -96,13 +89,9 @@ function PerspectivePanel(props){
     						}
     					})}
     					
-    					{/* <Button type="button" class="btn btn-secondary"  variant="dark" size="md" 
-    						value="0" onClick={(e) => setParam(e.target.value)}>
-    							+ 新規追加
-    					</Button> */}
     					<hr size="5" color="white" ></hr>
     					{data.map((obj) =>{
-    						if(obj['categorize_model'] != null){
+    						if(obj['categorize_model'] != "InputValueModel"){
     							return(
     								<Button type="button" class="btn btn-light" data-bs-toggle="button" variant="light" size="sm" 
     									value={obj['id']} onClick={(e) => setParam(e.target.value)}>

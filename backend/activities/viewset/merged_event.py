@@ -57,7 +57,7 @@ class MergedEventView(generics.ListAPIView):
     need_pagination = False
 
     start_datetime = None
-        
+    end_datetime = None
 
     def evaluate_params(self):
         params = self.request.query_params
@@ -87,18 +87,34 @@ class MergedEventView(generics.ListAPIView):
         #print(st_str)
         end_str = self.request.query_params.get("end")
         #print(end_str)
-        return Activity.objects.filter(start_time__gte=datetime.strptime(st_str, self.format_str),
+        if st_str == None:
+            if end_str == None:
+                return Activity.objects.exclude(title="blank")
+            else:
+                return Activity.objects.filter(start_time__lte=datetime.strptime(end_str, self.format_str)).exclude(title="blank")
+        else:
+            if end_str == None:
+                return Activity.objects.filter(start_time__gte=datetime.strptime(st_str, self.format_str)).exclude(title="blank")
+            else:
+                return Activity.objects.filter(start_time__gte=datetime.strptime(st_str, self.format_str),
                                        start_time__lte=datetime.strptime(end_str, self.format_str)).exclude(title="blank")
 
     def get_combined_queryset(self):
         st_str = self.request.query_params.get("start")
         end_str = self.request.query_params.get("end")
-        self.start_datetime = datetime.strptime(st_str, self.format_str)
+        if st_str:
+            self.start_datetime = datetime.strptime(st_str, self.format_str)
+        if end_str:
+            self.end_datetime = datetime.strptime(end_str, self.format_str)
         show_policy = 0
         if 'show_policy' in self.request.query_params:
             show_policy = int(self.request.query_params.get("show_policy"))
-        return get_combined_activities(datetime.strptime(st_str, self.format_str), 
-                                       datetime.strptime(end_str, self.format_str), show_policy)
+        
+        return get_combined_activities(self.start_datetime, 
+                                       self.end_datetime, show_policy)
+
+        #return get_combined_activities(datetime.strptime(st_str, self.format_str), 
+        #                               datetime.strptime(end_str, self.format_str), show_policy)
 
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required)) 
     def list(self, request, *args, **kwargs):

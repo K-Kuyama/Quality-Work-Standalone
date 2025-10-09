@@ -6,8 +6,9 @@ Created on 2024/08/06
 import unicodedata
 import re
 from rest_framework import generics
-from activities.models import Category, CategorizedActivity, CategorizedKeyWord, Perspective
+from activities.models import Category, CategorizedActivity, CategorizedKeyWord, Perspective, CategorizedActivityEval
 from activities.serializers.user_definition_serializers import _PerspectiveSerializer
+from activities.modules.ai.predictor_manager import PredictorManager
 
 def addEscape(string):
     dictionary = {
@@ -30,12 +31,15 @@ class ModelCreator:
         model_name = perspective.categorize_model
         if(model_name =="InputValueModel"):
             return InputValueModel()
+        elif(model_name =="AIPerspectiveModel"):
+            return AIPerspectiveModel(pid)
+        elif(model_name =="AIPerspectiveModelHighPossibility"):
+            return AIPerspectiveModelHighPossibility(pid)
         else:
             return PerspectiveModel(pid)
+            
         
 class InputValueModel():
-    
-
     
     def __init__(self):
         self.zappingColor = "#7fffff"
@@ -126,20 +130,12 @@ class PerspectiveModel(generics.RetrieveAPIView):
         return w_list
 
 
-    def get_colors(self, obj):
-        # デフォルト色をセット
-        bg_color ="#17192d"
-        #bg_color ="#595857"
-        str_color = "hsla(0,0%,100%,.7)"       
-        cid = None
-        eid = None
-        cname = "undefined"
-        
-#        print(f"get_colors {self.categories}")
-        c_info = dict()
+    def _checkExactActivity(self, obj):
+        #print(f"=>{self.categories}")
         for c in self.categories:
             for ed in c.events:
                 if ed['app']==obj.app and ed['title']==obj.title:
+                    c_info = dict()
                     c_info['backgroundColor'] = c.color
                     c_info['stringColor'] = "#d8469b"
                     c_info['categoryId'] = c.id
@@ -147,7 +143,9 @@ class PerspectiveModel(generics.RetrieveAPIView):
                     c_info['categoryName'] = c.name
 #                    print(f"get_color_by_event({app_str},{title_str}) vs {ed['title']} -> {c_info}")
                     return c_info
-                
+        return None
+
+    def _checkKeywordMatch(self, obj):
         for c in self.categories:
             rgx =c.getRegex()
 #            dprint(f"RGX : {rgx}")
@@ -156,26 +154,135 @@ class PerspectiveModel(generics.RetrieveAPIView):
                     bg_color = c.color
                     cid = c.id
                     cname = c.name
-                    break
-                else:
-                    cid = None
-                    cname = "undefined"
-            else:
-                cid = None
-                cname = "undefined"
-                
-        c_info['backgroundColor'] = bg_color
-        c_info['stringColor'] = str_color
-        c_info['categoryId'] = cid
-        c_info['eventId'] =  eid
-        c_info['categoryName'] = cname
-#        print(f"get_color_by_words({app_str},{title_str}) -> {c_info}")
-        return c_info
+                    
+                    c_info = dict()
+                    c_info['backgroundColor'] = bg_color
+                    c_info['stringColor'] = "hsla(0,0%,100%,.7)"
+                    c_info['categoryId'] = cid
+                    c_info['eventId'] =  None
+                    c_info['categoryName'] = cname
+                    return c_info
+        return None
+
+
+    def get_colors(self, obj):
+
+        cinfo = self._checkExactActivity(obj)
+        if cinfo:
+            return cinfo
+        cinfo = self._checkKeywordMatch(obj)
+        if cinfo:
+            return cinfo
+        else:
+            return({'backgroundColor':"#17192d",
+                    'stringColor':"hsla(0,0%,100%,.7)",
+                    'categoryId': None,
+                    'eventId': None,
+                    'categoryName':"undefined"
+                    })
 
 
 
 
-    
+
+# 学習モデルを使ったモデル
+
+class AIPerspectiveModel(PerspectiveModel):
+
+    def getCategory(self, id):
+        for c in self.categories:
+            if c.id == id:
+                return c
+        return None
+
+    def _categorizeByModel(self, obj, high_possibility_only = False):
+        # 学習モデルを使ってカテゴライズを行う
+        text = obj.app + " " + obj.title
+        pr = PredictorManager().get_predictor(self.perspective_id)
+        if pr == None:
+            return None
+        label, prob = pr.predict(text)
+
+        c = self.getCategory(label)
+        #print(f"{c.name}-{c.color}")
+        if c:
+            c_info = dict()
+            c_info['stringColor'] = "hsla(0,0%,100%,.7)"
+            c_info['eventId'] =  None
+
+            pr_str = '{:.2%}'.format(prob)
+            #pr_color = "hsla(0,0%,100%,.7)"
+
+            font_weight = "normal"
+            c_info['backgroundColor'] = c.color
+            c_info['categoryName'] = c.name
+            c_info['categoryId'] = c.id
+            
+            if prob < 0.5:
+                c_info['stringColor'] = "#777777"
+                if(high_possibility_only):
+                    c_info['backgroundColor'] = "#17192d"
+                    c_info['categoryName'] = "undefined"
+                    c_info['categoryId'] = None
+                    #c_info['stringColor'] = c.color
+                    #print(c_info)
+            c_info['fontWeight'] = font_weight
+            c_info['possibility'] = pr_str
+            return c_info
+        else:
+            return None
+
+
+
+    def get_colors(self, obj):
+
+        cinfo = self._checkExactActivity(obj)
+        if cinfo:
+            return cinfo
+        cinfo2 = self._categorizeByModel(obj)
+        if cinfo2:
+            return cinfo2
+        else:
+            return({'backgroundColor':"#17192d",
+                    'stringColor':"hsla(0,0%,100%,.7)",
+                    'categoryId': None,
+                    'eventId': None,
+                    'categoryName':"undefined"
+                    })  
+
+
+class AIPerspectiveModelHighPossibility(AIPerspectiveModel):
+
+    def get_colors(self, obj):
+
+        cinfo = self._checkExactActivity(obj)
+        if cinfo:
+            return cinfo
+        cinfo2 = self._categorizeByModel(obj, high_possibility_only=True)
+        if cinfo2:
+            return cinfo2
+        else:
+            return({'backgroundColor':"#17192d",
+                    'stringColor':"hsla(0,0%,100%,.7)",
+                    'categoryId': None,
+                    'eventId': None,
+                    'categoryName':"undefined"
+                    })  
+
+# 評価用のAIモデル
+
+class AIPerspectiveModelEval(AIPerspectiveModel):
+
+    def createActivities(self, cid):
+        models = CategorizedActivityEval.objects.all().filter(category=cid)
+        a_list = []
+        for model_a in models:
+            a_instance = {"id": model_a.id, "category": model_a.category, "app": model_a.app,
+                          "title": model_a.title }
+            a_list.append(a_instance)
+        return a_list
+
+#######    
     
 class CategoryDefinition:
     
@@ -240,8 +347,6 @@ class CategoryDefinition:
         else:
             return nfc_str+"|"+nfd_str
 
-
-    
 
 
 class ColorInfo:

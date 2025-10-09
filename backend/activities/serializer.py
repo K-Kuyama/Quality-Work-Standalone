@@ -5,7 +5,7 @@ Created on 2024/04/26
 '''
 
 from rest_framework import serializers
-from .models import Activity, Perspective, Category, CategorizedActivity, CategorizedKeyWord, AudioActivity, SystemSettings
+from .models import Activity, Perspective, Category, CategorizedActivity, CategorizedKeyWord, AudioActivity, ActivityPredictor, SystemSettings
 from django.conf import settings
 from dateutil.tz import gettz
 
@@ -78,6 +78,14 @@ class AudioActivitySerializer(serializers.ModelSerializer):
         fields = "__all__"
         list_serializer_class = CreateAudioActivityListSerializer
     
+# AI関連
+
+class ActivityPredictorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ActivityPredictor
+        fields = "__all__"
+
 # システム設定用のシリアライザー
 
 class SystemSettingsSerializer(serializers.ModelSerializer):

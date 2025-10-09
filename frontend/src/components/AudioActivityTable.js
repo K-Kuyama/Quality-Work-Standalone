@@ -52,50 +52,6 @@ function AudioActivityTable(props){
     },[props]);
     
 
-    /*
-    useEffect(() => {
-        setData(
-        [{'another_app': null,
-        'another_title': null,
-        'duration': 57,
-        'end_time': '2025-04-13T08:00:30.583958+09:00',
-        'id': 37,
-        'longest_app': 'Terminal',
-        'longest_title': 'article_sample — jupyter-notebook ▸ Python — 164×46',
-        'selected': 0,
-        'show_front': true,
-        'start_app': 'Safari',
-        'start_time': '2025-04-13T07:59:33.308195+09:00',
-        'start_title': 'Pythonでウェブサービスを作ろう！ 初心者向けdjangoチュートリアル #1 - YouTube'},
-       {'another_app': null,
-        'another_title': null,
-        'duration': 462,
-        'end_time': '2025-04-13T08:08:23.939959+09:00',
-        'id': 38,
-        'longest_app': 'Safari',
-        'longest_title': 'Pythonでウェブサービスを作ろう！ 初心者向けdjangoチュートリアル #1 - YouTube',
-        'selected': 0,
-        'show_front': true,
-        'start_app': 'Terminal',
-        'start_time': '2025-04-13T08:00:41.660752+09:00',
-        'start_title': 'backend — poetry shell ▸ Python — 165×68'},
-       {'another_app': null,
-        'another_title': null,
-        'duration': 377,
-        'end_time': '2025-04-13T08:15:34.855811+09:00',
-        'id': 39,
-        'longest_app': 'Safari',
-        'longest_title': 'Pythonでウェブサービスを作ろう！ 初心者向けdjangoチュートリアル #1 - YouTube',
-        'selected': 0,
-        'show_front': true,
-        'start_app': 'Notes',
-        'start_time': '2025-04-13T08:09:17.714228+09:00',
-        'start_title': '第６章 Reactプログラミング'}
-        ]
-        );
-        setHaveData(true);
-    },[props])
-    */
 
 
 	if (!haveData) {

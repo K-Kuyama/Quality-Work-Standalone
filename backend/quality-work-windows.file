@@ -1,5 +1,52 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+#sklearnに関係しては、静的解析で解決できないやり方で
+#モジュールインポートしているので、hiddenimportsに関連するモジュールを定義する必要がある。
+# sklearnのサブモジュール及び、scipy, joblib, threadpoolctl
+# これらについてはモジュールを_internalの中にコピーして抱え持つ必要があり、
+# datasに定義しておく必要がある。ただし、サイズが大きくなってしまうため、
+# sklearn, scipyは必要なものだけをdatasに入れておき、不要なものはexcludesで除外する。
+
+
+# --- scikit-learn関連 ---
+sklearn_hiddenimports = [
+    'sklearn', 'sklearn._config', 'sklearn._distributor_init',  
+    'sklearn.base', 'sklearn.utils',
+    'sklearn.feature_extraction', 'sklearn.feature_extraction.text',
+    'sklearn.linear_model', 'sklearn.model_selection',
+    'sklearn.metrics', 'sklearn.preprocessing',
+    'sklearn.exceptions',
+    'sklearn.externals',           
+    'sklearn.externals._joblib',   
+    'sklearn.externals._joblib.externals.loky',  
+    'sklearn.externals.array_api_compat',        
+    'sklern._cyutility',
+    'sklearn.utils._isfinite',  # ← Cython モジュールも追加
+    'sklearn._loss',
+    'sklearn.svm',
+]
+
+scipy_hiddenimports = [
+    'scipy',
+    'scipy.__init__',   
+    'scipy.__config__',
+    'scipy.version',
+    'scipy.sparse',
+    'scipy.special',
+    'scipy._lib',            
+    'scipy._lib._util',      
+    'scipy._cyutility', 
+    'scipy.linalg',
+    'scipy.stats',
+    'scipy.spatial',
+    'scipy.constants',
+    'scipy.optimize',
+    'scipy.fft',
+    'scipy.integrate', 
+    'scipy.interpolate',
+    'scipy.ndimage',
+]
+
 
 a = Analysis(
     ['quality-work.py'],
@@ -16,6 +63,47 @@ a = Analysis(
         ('.venv/Lib/site-packages/janome/sysdic/entries_compact*.py','janome/sysdic'),
         ('.venv/Lib/site-packages/janome/sysdic/entries_extra*.py','janome/sysdic'),
         ('.venv/Lib/site-packages/numpy.libs/*','numpy.libs'),
+
+        # --- sklearn関係（必要部分のみ） ---
+        ('.venv/lib/python3.11/site-packages/sklearn/__init__.py', 'sklearn'),
+        ('.venv/lib/python3.11/site-packages/sklearn/_config.py', 'sklearn'),
+        ('.venv/lib/python3.11/site-packages/sklearn/_distributor_init.py', 'sklearn'),  # ← 追加！
+        ('.venv/lib/python3.11/site-packages/sklearn/base.py', 'sklearn'),
+        ('.venv/lib/python3.11/site-packages/sklearn/utils', 'sklearn/utils'),
+        ('.venv/lib/python3.11/site-packages/sklearn/feature_extraction', 'sklearn/feature_extraction'),
+        ('.venv/lib/python3.11/site-packages/sklearn/linear_model', 'sklearn/linear_model'),
+        ('.venv/lib/python3.11/site-packages/sklearn/model_selection', 'sklearn/model_selection'),
+        ('.venv/lib/python3.11/site-packages/sklearn/metrics', 'sklearn/metrics'),
+        ('.venv/lib/python3.11/site-packages/sklearn/preprocessing', 'sklearn/preprocessing'),
+        ('.venv/lib/python3.11/site-packages/sklearn/__check_build', 'sklearn/__check_build'),
+        ('.venv/lib/python3.11/site-packages/sklearn/.dylibs/*', 'sklearn/.dylibs'),
+        ('.venv/lib/python3.11/site-packages/sklearn/exceptions.py', 'sklearn'),
+        ('.venv/lib/python3.11/site-packages/sklearn/externals', 'sklearn/externals'),
+        ('.venv/lib/python3.11/site-packages/sklearn/_cyutility*.so', 'sklearn/'),
+        ('.venv/lib/python3.11/site-packages/sklearn/utils/_isfinite*.so', 'sklearn/utils/'),
+        ('.venv/lib/python3.11/site-packages/sklearn/_loss', 'sklearn/_loss'),
+        ('.venv/lib/python3.11/site-packages/sklearn/svm', 'sklearn/svm'),
+
+        # --- 依存関係 ---
+        ('.venv/lib/python3.11/site-packages/threadpoolctl.py', '.'),
+        ('.venv/lib/python3.11/site-packages/joblib', 'joblib'),
+        #('.venv/lib/python3.11/site-packages/scipy', 'scipy'),
+        ('.venv/lib/python3.11/site-packages/scipy/*.py', 'scipy'),
+        #('.venv/lib/python3.11/site-packages/scipy/__config__.py', 'scipy'),
+        ('.venv/lib/python3.11/site-packages/scipy/sparse', 'scipy/sparse'),
+        ('.venv/lib/python3.11/site-packages/scipy/special', 'scipy/special'),
+        # .venv/lib/python3.11/site-packages/scipy/_lib の全ファイルを含める
+        ('.venv/lib/python3.11/site-packages/scipy/_lib', 'scipy/_lib'),
+        ('.venv/lib/python3.11/site-packages/scipy/_cyutility*.so', 'scipy/'),  # macOSの場合は .so
+        ('.venv/lib/python3.11/site-packages/scipy/linalg', 'scipy/linalg'),
+        ('.venv/lib/python3.11/site-packages/scipy/stats', 'scipy/stats'),
+        ('.venv/lib/python3.11/site-packages/scipy/spatial', 'scipy/spatial'),
+        ('.venv/lib/python3.11/site-packages/scipy/constants', 'scipy/constants'),
+        ('.venv/lib/python3.11/site-packages/scipy/optimize', 'scipy/optimize'),
+        ('.venv/lib/python3.11/site-packages/scipy/fft', 'scipy/fft'),
+        ('.venv/lib/python3.11/site-packages/scipy/integrate', 'scipy/integrate'),
+        ('.venv/lib/python3.11/site-packages/scipy/interpolate', 'scipy/interpolate'),
+        ('.venv/lib/python3.11/site-packages/scipy/ndimage', 'scipy/ndimage'),
     ],
     hiddenimports=['activities.apps','activities.urls','rest_framework.parsers','rest_framework.negotiation','rest_framework.metadata',
                 'numpy', 'numpy.__config__', 'numpy._array_api_info', 'numpy._configtool', 'numpy._core', 'numpy._core._add_newdocs', 
@@ -60,12 +148,47 @@ a = Analysis(
                 'numpy.lib.tests.test_loadtxt', 'numpy.lib.tests.test_mixins', 'numpy.lib.tests.test_nanfunctions', 
                 'numpy.lib.tests.test_packbits', 'numpy.lib.tests.test_polynomial', 'numpy.lib.tests.test_recfunctions', 
                 'numpy.lib.tests.test_regression', 'numpy.lib.tests.test_shape_base', 'numpy.lib.tests.test_stride_tricks', 
-                'numpy.lib.tests.test_twodim_base', 'numpy.lib.tests.test_type_check', 'numpy.lib.tests.test_ufunclike', 'numpy.lib.tests.test_utils', 'numpy.lib.user_array', 'numpy.linalg', 'numpy.linalg._linalg', 'numpy.linalg._umath_linalg', 'numpy.linalg.lapack_lite', 'numpy.linalg.linalg', 'numpy.linalg.tests', 'numpy.linalg.tests.test_deprecations', 'numpy.linalg.tests.test_linalg', 'numpy.linalg.tests.test_regression', 'numpy.ma', 'numpy.ma.core', 'numpy.ma.extras', 'numpy.ma.mrecords', 'numpy.ma.tests', 'numpy.ma.tests.test_arrayobject', 'numpy.ma.tests.test_core', 'numpy.ma.tests.test_deprecations', 'numpy.ma.tests.test_extras', 'numpy.ma.tests.test_mrecords', 'numpy.ma.tests.test_old_ma', 'numpy.ma.tests.test_regression', 'numpy.ma.tests.test_subclassing', 'numpy.ma.testutils', 'numpy.matlib', 'numpy.matrixlib', 'numpy.matrixlib.defmatrix', 'numpy.matrixlib.tests', 'numpy.matrixlib.tests.test_defmatrix', 'numpy.matrixlib.tests.test_interaction', 'numpy.matrixlib.tests.test_masked_matrix', 'numpy.matrixlib.tests.test_matrix_linalg', 'numpy.matrixlib.tests.test_multiarray', 'numpy.matrixlib.tests.test_numeric', 'numpy.matrixlib.tests.test_regression', 'numpy.polynomial', 'numpy.polynomial._polybase', 'numpy.polynomial.chebyshev', 'numpy.polynomial.hermite', 'numpy.polynomial.hermite_e', 'numpy.polynomial.laguerre', 'numpy.polynomial.legendre', 'numpy.polynomial.polynomial', 'numpy.polynomial.polyutils', 'numpy.polynomial.tests', 'numpy.polynomial.tests.test_chebyshev', 'numpy.polynomial.tests.test_classes', 'numpy.polynomial.tests.test_hermite', 'numpy.polynomial.tests.test_hermite_e', 'numpy.polynomial.tests.test_laguerre', 'numpy.polynomial.tests.test_legendre', 'numpy.polynomial.tests.test_polynomial', 'numpy.polynomial.tests.test_polyutils', 'numpy.polynomial.tests.test_printing', 'numpy.polynomial.tests.test_symbol', 'numpy.random', 'numpy.random._bounded_integers', 'numpy.random._common', 'numpy.random._generator', 'numpy.random._mt19937', 'numpy.random._pcg64', 'numpy.random._philox', 'numpy.random._pickle', 'numpy.random._sfc64', 'numpy.random.bit_generator', 'numpy.random.mtrand', 'numpy.random.tests', 'numpy.random.tests.data', 'numpy.random.tests.test_direct', 'numpy.random.tests.test_extending', 'numpy.random.tests.test_generator_mt19937', 'numpy.random.tests.test_generator_mt19937_regressions', 'numpy.random.tests.test_random', 'numpy.random.tests.test_randomstate', 'numpy.random.tests.test_randomstate_regression', 'numpy.random.tests.test_regression', 'numpy.random.tests.test_seed_sequence', 'numpy.random.tests.test_smoke', 'numpy.rec', 'numpy.strings', 'numpy.testing', 'numpy.testing._private', 'numpy.testing._private.extbuild', 'numpy.testing._private.utils', 'numpy.testing.overrides', 'numpy.testing.print_coercion_tables', 'numpy.testing.tests', 'numpy.testing.tests.test_utils', 'numpy.tests', 'numpy.tests.test__all__', 'numpy.tests.test_configtool', 'numpy.tests.test_ctypeslib', 'numpy.tests.test_lazyloading', 'numpy.tests.test_matlib', 'numpy.tests.test_numpy_config', 'numpy.tests.test_numpy_version', 'numpy.tests.test_public_api', 'numpy.tests.test_reloading', 'numpy.tests.test_scripts', 'numpy.tests.test_warnings', 'numpy.typing', 'numpy.typing.mypy_plugin', 'numpy.typing.tests', 'numpy.typing.tests.test_isfile', 'numpy.typing.tests.test_runtime', 'numpy.typing.tests.test_typing', 'numpy.version'],
+                'numpy.lib.tests.test_twodim_base', 'numpy.lib.tests.test_type_check', 'numpy.lib.tests.test_ufunclike', 
+                'numpy.lib.tests.test_utils', 'numpy.lib.user_array', 'numpy.linalg', 'numpy.linalg._linalg', 'numpy.linalg._umath_linalg',
+                'numpy.linalg.lapack_lite', 'numpy.linalg.linalg', 'numpy.linalg.tests', 'numpy.linalg.tests.test_deprecations', 
+                'numpy.linalg.tests.test_linalg', 'numpy.linalg.tests.test_regression', 'numpy.ma', 'numpy.ma.core', 'numpy.ma.extras', 
+                'numpy.ma.mrecords', 'numpy.ma.tests', 'numpy.ma.tests.test_arrayobject', 'numpy.ma.tests.test_core', 'numpy.ma.tests.test_deprecations', 
+                'numpy.ma.tests.test_extras', 'numpy.ma.tests.test_mrecords', 'numpy.ma.tests.test_old_ma', 'numpy.ma.tests.test_regression', 
+                'numpy.ma.tests.test_subclassing', 'numpy.ma.testutils', 'numpy.matlib', 'numpy.matrixlib', 'numpy.matrixlib.defmatrix', 
+                'numpy.matrixlib.tests', 'numpy.matrixlib.tests.test_defmatrix', 'numpy.matrixlib.tests.test_interaction', 
+                'numpy.matrixlib.tests.test_masked_matrix', 'numpy.matrixlib.tests.test_matrix_linalg', 'numpy.matrixlib.tests.test_multiarray', 
+                'numpy.matrixlib.tests.test_numeric', 'numpy.matrixlib.tests.test_regression', 'numpy.polynomial', 'numpy.polynomial._polybase', 
+                'numpy.polynomial.chebyshev', 'numpy.polynomial.hermite', 'numpy.polynomial.hermite_e', 'numpy.polynomial.laguerre', 'numpy.polynomial.legendre', 
+                'numpy.polynomial.polynomial', 'numpy.polynomial.polyutils', 'numpy.polynomial.tests', 'numpy.polynomial.tests.test_chebyshev', 
+                'numpy.polynomial.tests.test_classes', 'numpy.polynomial.tests.test_hermite', 'numpy.polynomial.tests.test_hermite_e', 
+                'numpy.polynomial.tests.test_laguerre', 'numpy.polynomial.tests.test_legendre', 'numpy.polynomial.tests.test_polynomial', 
+                'numpy.polynomial.tests.test_polyutils', 'numpy.polynomial.tests.test_printing', 'numpy.polynomial.tests.test_symbol', 'numpy.random', 
+                'numpy.random._bounded_integers', 'numpy.random._common', 'numpy.random._generator', 'numpy.random._mt19937', 'numpy.random._pcg64', 
+                'numpy.random._philox', 'numpy.random._pickle', 'numpy.random._sfc64', 'numpy.random.bit_generator', 'numpy.random.mtrand', 'numpy.random.tests', 
+                'numpy.random.tests.data', 'numpy.random.tests.test_direct', 'numpy.random.tests.test_extending', 'numpy.random.tests.test_generator_mt19937', 
+                'numpy.random.tests.test_generator_mt19937_regressions', 'numpy.random.tests.test_random', 'numpy.random.tests.test_randomstate', 
+                'numpy.random.tests.test_randomstate_regression', 'numpy.random.tests.test_regression', 'numpy.random.tests.test_seed_sequence', 
+                'numpy.random.tests.test_smoke', 'numpy.rec', 'numpy.strings', 'numpy.testing', 'numpy.testing._private', 'numpy.testing._private.extbuild', 
+                'numpy.testing._private.utils', 'numpy.testing.overrides', 'numpy.testing.print_coercion_tables', 'numpy.testing.tests', 
+                'numpy.testing.tests.test_utils', 'numpy.tests', 'numpy.tests.test__all__', 'numpy.tests.test_configtool', 'numpy.tests.test_ctypeslib', 
+                'numpy.tests.test_lazyloading', 'numpy.tests.test_matlib', 'numpy.tests.test_numpy_config', 'numpy.tests.test_numpy_version', 
+                'numpy.tests.test_public_api', 'numpy.tests.test_reloading', 'numpy.tests.test_scripts', 'numpy.tests.test_warnings', 'numpy.typing', 
+                'numpy.typing.mypy_plugin', 'numpy.typing.tests', 'numpy.typing.tests.test_isfile', 'numpy.typing.tests.test_runtime', 
+                'numpy.typing.tests.test_typing', 'numpy.version',
+            ] + sklearn_hiddenimports + scipy_hiddenimports,
 
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        # 不要な重いモジュールを除外
+        'sklearn.datasets','sklearn.cluster','sklearn.decomposition',
+        'sklearn.tree','sklearn.ensemble','sklearn.neural_network',
+        'sklearn.manifold','sklearn.mixture','sklearn.cross_decomposition',
+        'scipy.fft','scipy.signal','scipy.optimize','scipy.integrate',
+        'scipy.stats','scipy.io','scipy.interpolate','scipy.ndimage','scipy.linalg',
+    ],
+
     noarchive=False,
 )
 pyz = PYZ(a.pure)
@@ -78,7 +201,7 @@ exe = EXE(
     name='quality-work',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=True,
     upx=True,
     console=True,
     disable_windowed_traceback=False,

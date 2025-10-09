@@ -373,6 +373,39 @@
 
 /* UserDefPage.js */
 
+/* ModalCategoryDefEdit.js */
+
+
+/* ModalCategoryList.js */
+
+.category_defs {
+    display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+    /*background: #575977;*/
+    background: #404256;
+    /*background: #27293d;*/
+    padding: 10px;
+}
+
+.category-list {
+    display: flex;
+	flex-direction: column;
+}
+
+.category-item {
+    display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+    margin: 4px;
+	padding: 4px;
+    color: #fffafa;
+}
+
+
+
 /* PerspectivePanel.js */
 
 .perspectives{
@@ -399,7 +432,8 @@
 }
 
 .offcanvas{
-	width: 21% !important;
+	/*width: 21% !important;*/
+    width: 28% !important;
 }
 
 /* SidebarDefEditor.js */
@@ -413,12 +447,18 @@
     padding-bottom: 30px;
 }
 
+.drag-handle{
+    margin-right: 10px;
+}
+
 .perspective-item{
     display: flex;
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
+    margin: 4px;
 	padding: 4px;
+    color: #fffafa;
 }
 
 .perspective-input{
@@ -430,15 +470,27 @@
 
 
 /* PerspectiveEditor.js */
+.perspective_editor{
+    width: 90%;
+}
+
+.perspective_top{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
 
 .perspective_name{
-	width: 100%;
+	/*width: 70%;*/
 	display: flex;
     flex-direction: row;
     justify-content: center;
+    align-content: center;
     color: rgba(255, 255, 255, 0.55);
-    font-size: 24px;
-    margin-bottom: 20px;
+    font-size: 28px;
+    margin-bottom: 10px;
 }
 
 .top_bar_panel{
@@ -457,6 +509,51 @@
     flex-direction: row;
     justify-content: start;
     align-items: center;
+}
+
+
+.pe_tail{
+    width: 100%;
+    display: flex;
+	flex-direction: row;
+	justify-content: end;
+	padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.pe_tail >* {
+    margin-right: 4px;
+}
+
+/* PerspectiveModelViewSettings.js */
+
+.pm_settings_panel{
+    display: flex;
+    flex-direction: column;
+    /*align-items: center;*/
+}
+
+.pm_settings_label{
+    color:	white;
+    font-size: 11pt;
+}
+
+.perspective_model_view_settings{
+    display: flex;
+	flex-direction: column;
+	justify-content: start;
+    align-items: start;
+	/*width: 30%;*/
+    /* height: 30px; */
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-right: 10px;
+    color:	rgba(255, 255, 255, 0.55);
+    background-color: #575977;
+}
+
+.perspective_model_view_settingsl > label{
+    margin: 10px;
 }
 
 /* TopBarControlPanel.js */
@@ -548,7 +645,245 @@
 
 }
 
+.dropdown-item-small{
+    font-size: 12pt;
+}
+
+.category_edit_menu{
+    font-size: 12pt;
+}
+
+/* CategoryButtonListEdit.js */
+
+.def-editor-pane{
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.registered-pane{
+    background-color: #404256;
+    font-size: 10pt;
+    padding: 10px;
+}
+
+/* CategoryButtonListDelete.js */
+
+.del-info-body{
+    display: flex;
+	flex-direction: column;
+}
+
+.del-info-name{
+    font-size: 12pt;
+    color: white;
+}
+
+.del-info-item{
+    padding-left: 20px;
+}
+
+/* LMTable.js */
+
+.lm_table{
+    padding: 10px;
+    display: flex;
+	flex-direction: column;
+    
+    /* background-color: #808080; */
+}
+
+.lm_table_title{
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 18px;
+}
+
+.lm_create_button{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+/*
+.lm_info_box{
+    height: 400px;
+    border: 1px solid #000;
+    overflow-y: scroll;
+    background-color: #474963;  
+    color:	rgba(255, 255, 255, 0.55);
+
+}
+*/
+
+.lm_info{
+    background-color: #27293d;
+    color:	rgba(255, 255, 255, 0.55);
+    padding: 10px;
+    margin: 5px;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    border-style: solid;
+    border-width: thick;
+}
+
+.lm_info_h{
+    background-color: #27293d;
+    color:	rgba(255, 255, 255, 0.55);
+    display: flex;
+    flex-direction: row;
+    margin: 5px;
+    width: 100%;
+    text-align: center;
+}
+
+.lm_title{
+    display: flex;
+	flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    padding: 10px;
+    width: 20%;
+    font-size: 14px;
+}
+
+.lm_title_h{
+    display: flex;
+	flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    font-size: 14px;
+    width: 20%;
+}
+
+.lm_numbers{
+    display: flex;
+	flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    padding: 10px;
+    width: 20%;
+    font-size: 14px;
+}
+
+.lm_numbers_h{
+    display: flex;
+	flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    font-size: 14px;
+    width: 20%;
+}
+
+.lm_name{
+    width: 100%;
+    text-align:center;
+}
+
+.lm_date{
+    width: 100%;
+    text-align:center;
+}
+
+.start_end{
+    margin-left: 15px;
+    font-size: 12px;
+}
+
+.lm_score{
+    white-space: pre-wrap;
+    font-size: 10px;
+    width: 42%;
+}
+
+.lm_score_h{
+    display: flex;
+	flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    font-size: 14px;
+    width: 42%;
+}
+
+
+.lm_buttons{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items:center;
+    padding: 10px;
+    width: 18%;
+}
+
+.lm_buttons > .btn{
+    height: 40px;
+    margin: 5px;
+}
+
+/* LMCreateModal.js */
+
+.modal-body{
+    background-color: #474963;
+    color:	rgba(255, 255, 255, 0.55);
+}
+
+.lm_data_params{
+    display: flex;
+	flex-direction: column;
+    margin: 10px;
+    font-size: 14px;
+}
+
+.lm_time_period{
+    display: flex;
+    flex-direction: row;
+    margin-left: 30px;
+    margin-top: 10px;
+}
+
+.result_success{
+    display: flex;
+	flex-direction: column;
+    padding: 10px;
+}
+
+.result_number{
+    font-size: 12px;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 5px;
+    padding-left: 10px;
+    background-color: #27293d;
+}
+
+.result_score{
+    white-space: pre-wrap;
+    font-size: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 5px;
+    padding: 10px;
+    background-color: #27293d;
+}
+
+.result_button{
+    margin-top: 20px;
+    display: flex;
+	flex-direction: row;
+    justify-content: end;
+}
+
 /* CategoryEditor.js */
+
+.editor-message-line{
+    display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+.editor-message{
+    color: #fbfaf5;
+    font-size: 12pt;
+}
 
  /* CategoryPane3.js */
  
@@ -563,7 +898,40 @@
 	flex-direction: row;
 	justify-content: end;
 	align-items: center;
-    height: 60px;
+    height: 50px;
+
+}
+
+/* RegisteredActivity.js */
+
+.registered_act_pane{
+    display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+    /*background-color: #474963;*/
+}
+
+.registered_act_box{
+    width: 90%;
+    height: 200px;
+    border: 1px solid #000;
+    overflow-y: scroll;
+    background-color: #474963;  
+    color:	rgba(255, 255, 255, 0.55);
+    padding-left: 8px;
+    font-size: 8pt;
+    /* background-color: #AAA;*/
+}
+
+.ra_tail{
+    width: 90%;
+    display: flex;
+	flex-direction: row;
+	justify-content: end;
+	align-items: center;
+    height: 50px;
+    /*background-color: #474963;*/
 
 }
 
@@ -1027,6 +1395,16 @@ input#perspective_color{
    */
 
 
+
+/* eval/EvaluationEditor.js */
+.evaluation-pane{
+    background-color: #575977;
+}
+
+.evaluation_score_table{
+    padding: 20px;
+}
+
 .contents{
 	display: flex;
 	flex-direction: column;
@@ -1206,6 +1584,16 @@ th{
   --bs-btn-border-radius: 0.20rem;
 }
 
+.fs-7{font-size: 0.8rem;}
+
+.custom-modal {
+    height: 44px;
+    padding: 2px;
+}
+
+.custom-modal-title{
+    font-size: 18px;
+}
 
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 

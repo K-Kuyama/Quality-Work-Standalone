@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import Button from 'react-bootstrap/Button';
 import ActivitySelector from "./ActivitySelector"
 import TopBarControlPanel from "./TopBarControlPanel";
 import CategoryEditor from "./CategoryEditor";
-/* import PerspectiveDefEditor from "./PerspectiveDefEditor"; */
-//import Tab from 'react-bootstrap/Tab';
-//import Tabs from 'react-bootstrap/Tabs';
+import CategoryTabs from "./CategoryTabs";
+import EditableCategoryList from "./EditableCategoryList";
+import PerspectiveModelViewSettings from "./PerspectiveModelViewSettings";
+import LMTable from "./LMTable";
+
 import Settings from "../Settings";
 
 function PerspectiveEditor(props){
@@ -18,10 +21,24 @@ function PerspectiveEditor(props){
 	const [target_date, setDate] = useState(new Date());
 	const [item, setItem] = useState("event_list");
 
+	const [mode, setMode] = useState(null);
+
+	/* 編集画面の表示・非表示をコントロールするフラグ*/
+	const [showA, setA] = useState(false);
+	const [showC, setC] = useState(false);
+
+		/* 上位ページから引き継がれるハンドラー */
+	const handleChangePerspective = props.handler;
+	const setShowModal = props.modal_handler;
+
+	const setModel = (item)=>{
+		//console.log(item);
+		setMode(item);
+	}
 
 	useEffect(() =>{
-		//console.log(" p_id set .........")
-		//console.log(p_id)
+		// パースペクティブと関連情報を取得する
+
 		if(props.p_id != 0){
 			let target = Settings.HOME_PATH+'/api/user_def/_Perspective/'
 			if(Settings.DEVELOP){
@@ -36,15 +53,13 @@ function PerspectiveEditor(props){
 			})
 			.then(result =>{
 				const txt = JSON.stringify(result, null,' ');
-				//console.log('---Success ---');
-				//console.log(txt);
 				let res = JSON.parse(txt);
-				//console.log(res);			
+				console.log(res);			
 				setDef(res);
-				//console.log("set def",def);
+				setMode(res['categorize_model']);
 				setHaveData(true);
-				//console.log(haveData);
 				setDefChange(false);
+				handleChangePerspective(false);
 			})
 			.catch(error =>{
 				setHaveData(false);
@@ -56,8 +71,7 @@ function PerspectiveEditor(props){
 	},[props, p_id, def_change]);
 	
 
-	/* 上位ページから引き継がれるハンドラー */
-	const handleChangePerspective = props.handler;
+
 	
 	/* コントロールパネルに渡される日付、アイテム設定用ハンドラー */
     const setParams = (date_str, item_str) => {
@@ -66,11 +80,99 @@ function PerspectiveEditor(props){
         setItem(item_str.target_item);
     }
 
+	const showModal = (e) =>{
+		console.log("button clicked");
+		setShowModal(true);
+	}
 
+
+	/*****************************  編集画面用　*****************************/
+
+	const showAedit = (e) =>{
+		setA(true);
+		setC(false);
+	}
+
+	const showCedit = (e) =>{
+		setA(false);
+		setC(true);
+	}
+
+	const hideAedit = (e) =>{
+		setA(false);
+	}
+
+	const hideCedit = (e) =>{
+		setC(false);
+	}
+	
+	/****  レンダリング用関数　*****/
+
+
+	const editAButton = () =>{
+		if(mode != 'PerspectiveModel'){
+			if(showA == true){
+				return (
+					<Button className="btn-sm" variant="light" onClick={hideAedit}>登録済みアクティビティ　 <i class="bi bi-caret-up"></i> </Button>
+				)
+			} else {
+				return (
+					<Button className="btn-sm" variant="outline-light" onClick={showAedit}>登録済みアクティビティ　 <i class="bi bi-caret-down"></i> </Button>
+				)
+			}
+		}
+	}
+
+	const editCButton = () =>{
+		if(showC == true){
+			return (
+				<Button className="btn-sm" variant="light" onClick={hideCedit}>カテゴリーの編集　  <i class="bi bi-caret-up"></i> </Button>
+			)
+		} else {
+			return (
+				<Button className="btn-sm" variant="outline-light" onClick={showCedit}>カテゴリーの編集　  <i class="bi bi-caret-down"></i> </Button>
+			)
+		}
+	}
+
+
+	
+
+	const activityList = () =>{
+		if(showA == true){
+			return(
+				<>
+					<div className="registered-pane">
+						<CategoryTabs data={def} handler={setDefChange} p_kind={mode} />
+					</div>
+				</>
+			)
+		}
+	}
+
+	const categoryList = () =>{
+		if(showC == true){
+			return(
+				<EditableCategoryList pid={props.p_id} handler={setDefChange}/>
+			)
+		}
+	}
+
+
+	const categoryEditor = () =>{
+		if(mode == 'PerspectiveModel'){
+			return(
+				<div className="category_field">
+					<CategoryEditor data={def} handler={setDefChange} p_kind={mode} />
+				</div>
+			)
+		}
+	}
+
+	/**********************************************/
 	if(props.p_id == 0){
 		return(
 		<div className="perspective_editor" style={{width:"90%"}}>
-			{/*<PerspectiveDefEditor p_id="0" name="新規パースペクティブ" color="" handler={handleChangePerspective} />*/}
 			パースペクティブが定義されていません。左の「編集」ボタンを押してパースペクティブを定義してください。
 		</div>
 		)
@@ -79,19 +181,27 @@ function PerspectiveEditor(props){
 	}else{
 		return(
 		<div className="perspective_editor">
-			<div className="perspective_name"> {def['name']}</div>
-			{/* <PerspectiveDefEditor p_id={def['id']} name={def['name']} color={def['color']} handler={handleChangePerspective} /> */}
+			<div className="perspective_top">
+				<div></div>
+				<div className="perspective_name"> {def['name']}</div>
+				<PerspectiveModelViewSettings p_id={props.p_id} p_kind={mode} handler={setModel} />
+			</div>
 			<div id="controls" className="top_bar_panel">
 				<div className="top_bar_control">
 					<TopBarControlPanel date_handler={setDate} item_handler={setItem} page_handler={setCurrent} />
 				</div>
 			</div>
-			{/*console.log("test def value", def)*/}
 			<ActivitySelector data={def} target_date={target_date} item={item} handler={setDefChange} page_handler={setCurrent} p_id={props.p_id} current={current} />
-			<div className="category_field">
-				{/* console.log("test def value", def)*/}
-				<CategoryEditor data={def} handler={setDefChange}/>
-			</div>			
+			
+			<div className="pe_tail">
+				{editCButton()}
+				{editAButton()}
+			</div>
+			{activityList()}
+			{categoryList()}
+			<hr size="8" width="100%" color="white"></hr>
+			{categoryEditor()}
+			<LMTable p_id={props.p_id} p_kind={mode} />
 		</div>
 		)	
 	}

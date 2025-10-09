@@ -1,9 +1,10 @@
 import os
 import signal
 import time
+import array
 
 import pyaudio
-import numpy as np
+#import numpy as np
 
 from datetime import timedelta, datetime, timezone
 from zoneinfo import ZoneInfo
@@ -374,8 +375,10 @@ def audio_watcher_start(stop_flag):
     try:
         while not stop_flag.is_set(): #stop_flagイベントがセットされるとループから抜ける
             time.sleep(Poll_time)
-            data = np.frombuffer(stream.read(aus.CHUNK, exception_on_overflow=False), dtype=np.int16)
-            volume = np.abs(data).mean()  # 音量を取得
+            data = array.array('h', stream.read(aus.CHUNK, exception_on_overflow=False))
+            volume = sum(abs(x) for x in data) / len(data)
+            #data = np.frombuffer(stream.read(aus.CHUNK, exception_on_overflow=False), dtype=np.int16)
+            #volume = np.abs(data).mean()  # 音量を取得
             #print(f"音量: {volume:.2f}")
 
             if recording_state == 0:

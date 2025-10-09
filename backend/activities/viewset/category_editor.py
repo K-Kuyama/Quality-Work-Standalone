@@ -1,13 +1,6 @@
-'''
-Created on 2024/07/18
-
-@author: kuyamakazuhiro
-'''
 
 from rest_framework import generics
 from rest_framework.response import Response
-from activities.serializers.perspective_editor_serializer import PerspectiveEditorSerializer
-from activities.models import  Perspective
 from django.db import transaction
 
 from django.contrib.auth.decorators import login_required
@@ -15,10 +8,11 @@ from django.utils.decorators import method_decorator
 
 from django.conf import settings
 from activities.decolators import attach_decorator
+from activities.serializers.category_editor_serializer import CategoryEditorSerializer
+from activities.models import  Perspective, Category
 
-
-class PerspectiveEditorView(generics.ListAPIView):
-    serializer_class = PerspectiveEditorSerializer
+class CategoryEditorView(generics.ListAPIView):
+    serializer_class = CategoryEditorSerializer
 
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required))  
     @transaction.atomic 
@@ -30,9 +24,9 @@ class PerspectiveEditorView(generics.ListAPIView):
             idx = 0
             for it in items:
                 if it['delete_flag'] :
-                    Perspective.objects.filter(pk=it['id']).delete()
+                    Category.objects.filter(pk=it['id']).delete()
                 elif it['id'] :
-                    obj = Perspective.objects.get(pk=it['id'])
+                    obj = Category.objects.get(pk=it['id'])
                     obj.name = it['name']
                     obj.color = it['color']
                     obj.index = it['index']
@@ -41,8 +35,9 @@ class PerspectiveEditorView(generics.ListAPIView):
                     idx += 1
                     r_items.append(it)
                 else :
-                    p = Perspective.objects.create(name=it['name'], color=it['color'], use_def_color=True, index=it['index'])
-                    it['id'] = p.id
+                    p = Perspective.objects.get(pk=it['perspective'])
+                    c = Category.objects.create(perspective=p, name=it['name'], color=it['color'], index=it['index'])
+                    it['id'] = c.id
                     #it['index'] = idx
                     idx += 1
                     r_items.append(it)
@@ -51,9 +46,3 @@ class PerspectiveEditorView(generics.ListAPIView):
         return Response(serializer.data)
     
     
-        
-        
-        
-                
-        
-        

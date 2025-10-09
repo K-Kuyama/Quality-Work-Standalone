@@ -2,6 +2,8 @@
 Created on 2024/06/28
 
 @author: kuyamakazuhiro
+
+perspective_model.pyに移行したため、使っていない。頃合いを見て削除する。
 '''
 import threading
 import unicodedata

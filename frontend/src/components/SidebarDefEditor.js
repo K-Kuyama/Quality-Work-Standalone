@@ -4,6 +4,13 @@ import ToggleButton from 'react-bootstrap/ToggleButton';
 import Badge from 'react-bootstrap/Badge';
 import Cookies from "universal-cookie";
 import Settings from "../Settings";
+import SidebarSortablePerspective from "./SidebarSortablePerspective";
+
+import {DragOverlay,DndContext} from '@dnd-kit/core';
+
+import {SortableContext, arrayMove} from '@dnd-kit/sortable';
+import {useSortable} from '@dnd-kit/sortable';
+import {CSS} from '@dnd-kit/utilities';
 
 function SidebarDefEditor(props){
 
@@ -12,10 +19,9 @@ function SidebarDefEditor(props){
 		// 特殊なカテゴライズモデルを持つものは除外
 		/* id name color delete_flag  */
 		let ret_data =[]
-		//console.log("data:", data);
 		if(data){
 			let r_data = data.filter(function(item){
-				return item['categorize_model']==null;
+				return item['categorize_model']!="InputValueModel";
 			});
 			r_data.map((obj, idx) =>{
 				ret_data.push({index: idx, id: obj['id'], name: obj['name'], color: obj['color'], delete_flag: false});
@@ -26,12 +32,25 @@ function SidebarDefEditor(props){
 
 
 	const [items, setItems] = useState([]);
+	const [sitems, setSitems] = useState([]);
 	const setMenueChanged = props.handler;
+	const [activeId, setActiveId] = useState(null);
 	
+
+	const setOrder = (items) =>{
+		let n_items = items.slice();
+		for (let i = 0; i < n_items.length; i++) {
+			n_items[i]['index'] = i;
+		}
+		return n_items;
+	}
+
 	const saveInfo = (e) =>{
 		// 設定保存用ハンドラー
 		// データベースにperspectiveの変更を反映する
-		console.log(items);
+		//console.log("items",items);
+		const n_items = setOrder(items);
+		//console.log("n_items",n_items);
 		const cookies = new Cookies();
 		const token = cookies.get('csrftoken')
 		let target = Settings.HOME_PATH+'/api/user_def/perspective_editor/'
@@ -46,7 +65,7 @@ function SidebarDefEditor(props){
 					'Content-Type' : 'application/json',
 					'X-CSRFToken': token,
 				},
-				body: JSON.stringify(items)
+				body: JSON.stringify(n_items)
 			}
 		)
 		.then(response => {
@@ -114,8 +133,10 @@ function SidebarDefEditor(props){
 		// タイトルの変更ハンドラー
 		console.log(e.target);
 		setItems(
-			items.map((item, index) => {
-				if(index == idx){
+			//items.map((item, index) => {
+			items.map((item) => {
+				//if(index == idx){
+				if(item['index'] == idx){
 					return{...item, name: e.target.value};
 				} else {
 					return item;
@@ -126,6 +147,19 @@ function SidebarDefEditor(props){
 
 	const setDelete = (idx, id, e)=>{
 		//削除ボタンが押された時のハンドラー
+		items.map((item)=>{
+			console.log(idx, item['index']);
+			if(item['index'] == idx){
+				console.log("index", idx, "name",item['name']);
+				const str = "input[id='perspective-id-"+idx+"']"
+				console.log(str);
+				const el = document.querySelector(str);
+				if(el){
+					console.log("index", idx, "text",el.value);
+				}
+
+			}
+		})
 		if(id){updateState(idx, e);}
 		else{deleteItem(idx);}
 	}
@@ -140,8 +174,8 @@ function SidebarDefEditor(props){
 		//console.log("updateState",items);
 		let sts = e.target.checked;
 		setItems(
-			items.map((item, index) => {
-				if(index == idx){
+			items.map((item) =>{
+				if(item['index'] == idx){
 					return{...item, delete_flag: !(item.delete_flag)};
 				} else {
 					return item;
@@ -173,7 +207,52 @@ function SidebarDefEditor(props){
 		setItems(createInitialItems(props.data));
 	},[props]);
 	
-	
+
+/*
+	const syncTextValue = () =>{
+		items.map((item)=>{
+			const str = "input[id='perspective-id-"+item['index']+"']"
+			console.log(str);
+			const el = document.querySelector(str);
+			if(el){
+				console.log("index", item['index'], "text",el.value);
+				el.value = item['name'];
+			}
+
+		})
+	}
+	*/
+
+	const handleDragEnd =(event) => {
+		const {active, over} = event;
+
+		if (active.id !== over.id) {
+			setItems(items => {
+			const oldIndex = items.findIndex(item => item.index === active.id);
+			const newIndex = items.findIndex(item => item.index === over.id);
+			const nitems = arrayMove(items, oldIndex, newIndex);
+			// console.log('items',items);
+			// console.log('return', nitems);
+			return nitems;
+			});
+		}
+		setActiveId(null);
+		//syncTextValue();
+	}
+
+	const getObj = (id) =>{
+		if (items.length >0 ){
+            let clist = items.filter(c => c['index']==id);
+            if(clist.length > 0){
+                return clist[0];
+            } else {
+                return null
+            }
+        } else {
+            return null;
+        }
+	}
+
 	return(
 		<div calssName="sidebar_def_editor">
 			<div className="pp_header">
@@ -183,27 +262,30 @@ function SidebarDefEditor(props){
     			</Button>
     		</div>
 			<div className="d-grid gap-2">
-				{items.map((obj) =>{if(obj){
-					return(
-						<div className="perspective-item" name="perspective-item-" style={{backgroundColor: setColor(obj)}}>
-							<div className="perspective-input gap-2">
-        						{/* <input type="color" id={"perspective_color-"+obj['index']} readOnly={obj['delete_flag']}
-        							defaultValue={obj['color']} onChange={handleColor} style={{width: "30px"}}></input>		*/}			
-								<input type="text" id={"perspective-id-"+obj['index']} 
-								style={{width: "150px", height: "26px", fontSize: "14px", backgroundColor: setTextColor(obj)}} readOnly={obj['delete_flag']}
-        								defaultValue={obj['name']}  onChange={(e) => updateText(obj['index'], e)} 
-        								></input>
-        						{setBadge(obj['id'])}
-        					</div>
-        					<ToggleButton type="checkbox" id={"delete-btn-"+obj['index']} className="btn btn-secondaryr" variant="secondary" data-bs-toggle="button" size="x-sm" value={obj['id']} onClick={(e) => setDelete(obj['index'],obj['id'], e)}>
-    							{setDeleteLabel(obj['delete_flag'])	}
-    						</ToggleButton>
-						</div>
-					)}						
-				})}
+				<div className="sortablePanel">
+					<DndContext onDragEnd={handleDragEnd} onDragStart={({active}) => setActiveId(active.id)}>
+						<SortableContext items={items.map(item => item.index)}>
 
+							{items.map((obj) =>{if(obj){
+									return(
+										<SidebarSortablePerspective obj={obj} 
+											active={activeId} 
+											update_text={updateText} 
+											set_delete={setDelete} 
+											set_delete_label={setDeleteLabel} 
+										/>
+									)
+								}						
+							})}
+
+						</SortableContext>
+						<DragOverlay>
+        					{activeId ? <SidebarSortablePerspective obj={getObj(activeId)} /> : null}
+     					 </DragOverlay>
+					</DndContext>
+				</div>
 				<Button type="button" class="btn btn-secondary"  variant="dark" size="sm" 
-    					value="0" onClick={(e) => addNewItem(e)}  style={{width: "34%"}}>
+    					value="0" onClick={(e) => addNewItem(e)}  style={{width: "100px"}}>
     							+ 新規追加
     			</Button>
 			</div> {/* d-grid */}

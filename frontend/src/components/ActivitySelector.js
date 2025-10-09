@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import Pagination from "./Pagination";
 import ActivityCheckList from "./ActivityCheckList";
 import CategoryButtonList from "./CategoryButtonList";
+//import CategoryButtonListAI from "./CategoryButtonListAI";
 import { getBothEnds } from "./utils";
 import { ShowPolicyContext } from '../Context';
 import Cookies from "universal-cookie";
@@ -19,6 +20,7 @@ function ActivitySelector(props){
 	const ctx = useContext(ShowPolicyContext);
 	const clearCheck = props.handler;
 	const setCurrent = props.page_handler;
+	const defChangeHandler = props.handler;
 
 	const setCategory = (e) =>{
 		let activities = document.querySelectorAll("input[name=a_item]:checked")
@@ -200,7 +202,7 @@ function ActivitySelector(props){
 				<div className="evtable">	
 					<Pagination response={ev_data} handler={handleReload} />
 					<ActivityCheckList response={ev_data["results"]} /> 
-					<CategoryButtonList def={props.data} handler={setCategory} c_handler={cancelCategory}/>
+					<CategoryButtonList def={props.data} def_change_handler={defChangeHandler} handler={setCategory} c_handler={cancelCategory}/>
 				</div>
 //			</div>
 		);
