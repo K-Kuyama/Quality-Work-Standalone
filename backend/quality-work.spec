@@ -68,6 +68,7 @@ a = Analysis(
 
         # --- janome辞書 ---
         ('.venv/lib/python3.11/site-packages/janome/sysdic/entries_compact*.py','janome/sysdic'),
+        ('.venv/lib/python3.11/site-packages/janome/sysdic/entries_extra*.py','janome/sysdic'),
 
         # --- sklearn関係（必要部分のみ） ---
         ('.venv/lib/python3.11/site-packages/sklearn/__init__.py', 'sklearn'),

@@ -153,9 +153,15 @@ class DatabaseInfoView(generics.ListAPIView):
 
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required)) 
     def list(self, request, *args, **kwargs):
+        # tablesは移行対象になり得るテーブルの情報。以下の内容が含まれる
+        # (テーブル名,依存している親テーブルのインデック、依存している子テーブルのインデックス、完全置き換えか否かのデフォルト値)
         tables = [("activities.Activity",None, None, False), ("activities.Perspective",None, "2-3-4", True), 
                   ("activities.Category","1", "3-4", True),("activities.CategorizedKeyWord","1-2", None, True), 
-                  ("activities.CategorizedActivity","1-2", None, True)]
+                  ("activities.CategorizedActivity","1-2", None, True),
+                  ("activities.AudioActivity",None, None, False),
+                  ("activities.ActivityPredictor",None, None, False),
+                  ("activities.SystemSettings",None, None, True)
+                  ]
         results = []
         self.evaluate_params()
         #print(f"db file is {self.file}")
@@ -165,10 +171,13 @@ class DatabaseInfoView(generics.ListAPIView):
             for table in tables:
                 table_name = self.getTableName(table[0])
                 select_sql = "SELECT count(*) FROM "+table_name
-                cur.execute(select_sql)
-                count = cur.fetchone()
-                results.append({"name": table[0], "count": count[0], 
-                                "parents": table[1], "children": table[2], "replace": table[3]})
+                try:
+                    cur.execute(select_sql)
+                    count = cur.fetchone()
+                    results.append({"name": table[0], "count": count[0], 
+                                    "parents": table[1], "children": table[2], "replace": table[3]})
+                except sqlite3.OperationalError as ex:
+                    print(f"{self.file}:{table[0]} error {ex}")
         except sqlite3.Error as e:
             print(f"{self.file} error {e}")
         if 'file' in request.query_params:
@@ -206,6 +215,7 @@ class DatabaseMigrationView(generics.ListAPIView):
         ("activities.Category",["id", "name", "color", "perspective"]),
         ("activities.CategorizedActivity", ["id", "app", "title", "category"]),
         ("activities.CategorizedKeyWord", ["id", "word", "positive", "category"])
+
     ]
 
     file = None
@@ -250,10 +260,17 @@ class TableMigrationView(generics.ListAPIView):
     target_info = {
         "activities.Activity":["id", "start_time", "duration", "distance_x", "distance_y", 
                                     "strokes", "scrolls", "app", "title"],
-        "activities.Perspective": ["id", "name", "color", "use_def_color", "categorize_model"],
-        "activities.Category": ["id", "name", "color", "perspective"],
+        "activities.Perspective": ["id", "name", "color", "use_def_color", "categorize_model", "index"],
+        "activities.Category": ["id", "name", "color", "perspective", "index"],
         "activities.CategorizedActivity": ["id", "app", "title", "category"],
-        "activities.CategorizedKeyWord": ["id", "word", "positive", "category"]
+        "activities.CategorizedKeyWord": ["id", "word", "positive", "category"],
+        "activities.AudioActivity": ["id", "start_time", "end_time", "duration", "start_app", "start_title",
+                                     "longest_app", "longest_title", "another_app", "another_title",
+                                     "selected", "show_policy"],
+        "activities.ActivityPredictor": ["id", "p_id", "name", "created_dtime", 
+                                         "num_of_labels", "num_of_learning_data", "score", "using", "data_start", "data_end"],
+        "activities.SystemSettings": ["id", "role", "audio_activity_policy", "duration_threshold",
+                                      "strokes_threshold", "distance_threshold"]
     }
 
 
