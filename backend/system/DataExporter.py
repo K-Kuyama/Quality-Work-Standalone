@@ -56,7 +56,7 @@ class DataExporter:
 
         cls = globals()[class_name]
 
-        if self.must_replace:
+        if target in self.must_replace:
             #replaceフラグに関わらず、該当テーブルのデータを全て消去
             cls.objects.all().delete()
         elif replace_flag:
