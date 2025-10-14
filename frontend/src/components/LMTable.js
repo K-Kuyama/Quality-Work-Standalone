@@ -149,7 +149,8 @@ function LMTable(props){
 
     },[props, changed])
 
-    if(props.p_kind != 'PerspectiveModel'){
+    //if(props.p_kind != 'PerspectiveModel'){
+    if(props.p_kind != 'PerspectiveModel' || props.p_kind != null){
     return (
         <div className="lm_table">
             <div className="lm_table_title">

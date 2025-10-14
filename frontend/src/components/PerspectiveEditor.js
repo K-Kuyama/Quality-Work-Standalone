@@ -110,7 +110,8 @@ function PerspectiveEditor(props){
 
 
 	const editAButton = () =>{
-		if(mode != 'PerspectiveModel'){
+		//if(mode != 'PerspectiveModel'){
+		if(mode != 'PerspectiveModel' || mode !=null){
 			if(showA == true){
 				return (
 					<Button className="btn-sm" variant="light" onClick={hideAedit}>登録済みアクティビティ　 <i class="bi bi-caret-up"></i> </Button>
@@ -160,7 +161,8 @@ function PerspectiveEditor(props){
 
 
 	const categoryEditor = () =>{
-		if(mode == 'PerspectiveModel'){
+		//if(mode == 'PerspectiveModel'){
+		if(mode == 'PerspectiveModel' || mode == null){
 			return(
 				<div className="category_field">
 					<CategoryEditor data={def} handler={setDefChange} p_kind={mode} />
