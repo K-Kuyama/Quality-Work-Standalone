@@ -111,7 +111,7 @@ function PerspectiveEditor(props){
 
 	const editAButton = () =>{
 		//if(mode != 'PerspectiveModel'){
-		if(mode != 'PerspectiveModel' || mode !=null){
+		if(mode == 'AIPerspectiveModel' || mode == "AIPerspectiveModelHighPossibility"){
 			if(showA == true){
 				return (
 					<Button className="btn-sm" variant="light" onClick={hideAedit}>登録済みアクティビティ　 <i class="bi bi-caret-up"></i> </Button>
