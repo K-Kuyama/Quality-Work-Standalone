@@ -17,6 +17,14 @@ function LMTable(props){
         setShow(false);
     }
 
+    const lmChanged = props.handler;
+
+    const setChangedAll = (value) =>{
+        setChanged(value);
+        lmChanged(value);
+    }
+
+
     const activate_lm = (e) =>{
         let target = Settings.HOME_PATH+'/api/AI/activate_predictor/'
         if(Settings.DEVELOP){
@@ -38,6 +46,7 @@ function LMTable(props){
             console.log(res);			
             setList(res);
             setHaveData(true);
+            lmChanged(true);
         })
         .catch(error =>{
             setHaveData(false);
@@ -187,7 +196,7 @@ function LMTable(props){
                     )
                 })}
             </div>
-            <LMCreateModal show={show} p_id={props.p_id} handler={handleClose} set_changed={setChanged} activate={activate_lm}/>
+            <LMCreateModal show={show} p_id={props.p_id} handler={handleClose} set_changed={setChangedAll} activate={activate_lm}/>
         </div>
     )
     }

@@ -203,7 +203,7 @@ function PerspectiveEditor(props){
 			{categoryList()}
 			<hr size="8" width="100%" color="white"></hr>
 			{categoryEditor()}
-			<LMTable p_id={props.p_id} p_kind={mode} />
+			<LMTable p_id={props.p_id} p_kind={mode} handler={setDefChange}/>
 		</div>
 		)	
 	}
