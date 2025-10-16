@@ -65,11 +65,11 @@ function PerspectiveModelViewSettings(props){
                 </label>
                 <label>
                     <input type="radio" name="cwitems" id="id-1" value="AIPerspectiveModel" checked={model_kind == "AIPerspectiveModel"} onChange={setChange} />
-                    &nbsp;学習モデルによる推定：全て
+                    &nbsp;AIによる分類：全て
                 </label>
                 <label>
                     <input type="radio" name="cwitems" id="id-2" value="AIPerspectiveModelHighPossibility" checked={model_kind == "AIPerspectiveModelHighPossibility"} onChange={setChange} />
-                    &nbsp;学習モデルによる推定：高確度のみ
+                    &nbsp;AIによる分類：高確度のみ
                 </label>
             </div>
         </div>
