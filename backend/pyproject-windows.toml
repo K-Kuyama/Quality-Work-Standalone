@@ -20,6 +20,7 @@ pyinstaller = "^6.11.1"
 pywin32 = "^308"
 pyaudio = "^0.2.14"
 numpy = "^2.3.0"
+scikit-learn = "^1.7.2"
 
 
 [build-system]
