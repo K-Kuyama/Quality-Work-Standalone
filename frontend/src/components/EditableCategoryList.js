@@ -211,12 +211,6 @@ function EditableCategoryList(props){
 
     return(
         <div className="category_defs">
-            <div className="pp_header">
-				<Button type="button" className="btn btn-ppheader" data-bs-toggle="button" variant="primary" size="sm" value="save" 
-					onClick={(e)=>saveInfo(e)}>
-    					保存
-    			</Button>
-    		</div>
             <div className="d-grid gap-2">
                 <div >
                     <DndContext onDragEnd={handleDragEnd} onDragStart={({active}) => setActiveId(active.id)}>
@@ -242,6 +236,12 @@ function EditableCategoryList(props){
                                 + 新規追加
                 </Button>
             </div>
+            <div className="pp_tail">
+				<Button type="button" className="btn btn-ppheader" data-bs-toggle="button" variant="primary" size="sm" value="save" 
+					onClick={(e)=>saveInfo(e)}>
+    					保存
+    			</Button>
+    		</div>
         </div>
     )
 

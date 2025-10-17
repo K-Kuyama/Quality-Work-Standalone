@@ -162,11 +162,14 @@ function LMTable(props){
     if(props.p_kind == 'AIPerspectiveModel' || props.p_kind == "AIPerspectiveModelHighPossibility"){
     return (
         <div className="lm_table">
-            <div className="lm_table_title">
-                AIモデル一覧
-            </div>
-            <div className="lm_create_button">
-                <Button variant="primary" size="sm"  onClick={setShow}> モデル生成 </Button>
+            <div className="lm_header">
+                <div></div>
+                <div className="lm_table_title">
+                    AIモデル一覧
+                </div>
+                <div className="lm_create_button">
+                    <Button variant="primary" size="sm"  onClick={setShow}> モデル生成 </Button>
+                </div>
             </div>
             <div className="lm_info_h">
                 <div className="lm_title_h">タイトル・生成時刻</div>

@@ -107,7 +107,7 @@ function CategoryButtonList(props){
 				})}
 			</div>
 			<div className="cancellation_button_panel">
-				<Button type="button" class="btn btn-outline-primary btn-sm" size="sm" 
+				<Button type="button" variant="outline-primary" class="btn btn-outline-primary btn-sm" size="sm" 
 					onContextMenu={(e) =>handleReleaseContextMenu(e)} 
 					onClick={(e) => cancelCategory(e)}
 					style={{margin: "2px"}}> 解除 </Button>

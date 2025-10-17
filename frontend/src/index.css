@@ -387,6 +387,7 @@
     background: #404256;
     /*background: #27293d;*/
     padding: 10px;
+    padding-top: 20px;
 }
 
 .category-list {
@@ -445,6 +446,15 @@
 	justify-content: end;
 	padding-top: 4px;
     padding-bottom: 30px;
+}
+
+.pp_tail{
+    width: 100%;
+    display: flex;
+	flex-direction: row;
+	justify-content: end;
+	padding-top: 4px;
+    padding-bottom: 4px;
 }
 
 .drag-handle{
@@ -529,31 +539,39 @@
 
 .pm_settings_panel{
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    width: 100%;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    background-color: #575977;
     /*align-items: center;*/
 }
 
 .pm_settings_label{
     color:	white;
-    font-size: 11pt;
+    font-size: 12pt;
+    background-color: #575977;
+    margin-left: 20px;
 }
 
 .perspective_model_view_settings{
     display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	justify-content: start;
     align-items: start;
-	/*width: 30%;*/
+	/*width: 80%;*/
     /* height: 30px; */
     padding-left: 10px;
     padding-right: 10px;
+    margin-left: 20px;
     margin-right: 10px;
     color:	rgba(255, 255, 255, 0.55);
     background-color: #575977;
 }
 
-.perspective_model_view_settingsl > label{
-    margin: 10px;
+.perspective_model_view_settings > label{
+    margin-right: 30px;
+    font-size: 11pt;
 }
 
 /* TopBarControlPanel.js */
@@ -690,6 +708,14 @@
 	flex-direction: column;
     
     /* background-color: #808080; */
+}
+.lm_header{
+    width: 100%;
+    display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	padding-top: 10px;
+    padding-bottom: 4px;
 }
 
 .lm_table_title{

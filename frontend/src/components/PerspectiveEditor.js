@@ -110,8 +110,8 @@ function PerspectiveEditor(props){
 
 
 	const editAButton = () =>{
-		//if(mode != 'PerspectiveModel'){
-		if(mode == 'AIPerspectiveModel' || mode == "AIPerspectiveModelHighPossibility"){
+		if(mode != 'InputValueModel'){
+		//if(mode == 'AIPerspectiveModel' || mode == "AIPerspectiveModelHighPossibility"){
 			if(showA == true){
 				return (
 					<Button className="btn-sm" variant="light" onClick={hideAedit}>登録済みアクティビティ　 <i class="bi bi-caret-up"></i> </Button>
@@ -127,11 +127,11 @@ function PerspectiveEditor(props){
 	const editCButton = () =>{
 		if(showC == true){
 			return (
-				<Button className="btn-sm" variant="light" onClick={hideCedit}>カテゴリーの編集　  <i class="bi bi-caret-up"></i> </Button>
+				<Button className="btn-sm" variant="outline-primary" onClick={hideCedit}>カテゴリー編集　  <i class="bi bi-caret-up"></i> </Button>
 			)
 		} else {
 			return (
-				<Button className="btn-sm" variant="outline-light" onClick={showCedit}>カテゴリーの編集　  <i class="bi bi-caret-down"></i> </Button>
+				<Button className="btn-sm" variant="primary" onClick={showCedit}>カテゴリー編集　  <i class="bi bi-caret-down"></i> </Button>
 			)
 		}
 	}
@@ -184,24 +184,25 @@ function PerspectiveEditor(props){
 		return(
 		<div className="perspective_editor">
 			<div className="perspective_top">
-				<div></div>
+				<div></div>	
 				<div className="perspective_name"> {def['name']}</div>
-				<PerspectiveModelViewSettings p_id={props.p_id} p_kind={mode} handler={setModel} />
+				{editCButton()}		
 			</div>
+			{categoryList()}
 			<div id="controls" className="top_bar_panel">
 				<div className="top_bar_control">
 					<TopBarControlPanel date_handler={setDate} item_handler={setItem} page_handler={setCurrent} />
 				</div>
 			</div>
 			<ActivitySelector data={def} target_date={target_date} item={item} handler={setDefChange} page_handler={setCurrent} p_id={props.p_id} current={current} />
-			
 			<div className="pe_tail">
-				{editCButton()}
 				{editAButton()}
 			</div>
 			{activityList()}
-			{categoryList()}
-			<hr size="8" width="100%" color="white"></hr>
+
+			{/*<hr size="8" width="100%" color="white"></hr>*/}	
+			<PerspectiveModelViewSettings p_id={props.p_id} p_kind={mode} handler={setModel} />
+			
 			{categoryEditor()}
 			<LMTable p_id={props.p_id} p_kind={mode} handler={setDefChange}/>
 		</div>

@@ -54,26 +54,28 @@ function PerspectiveModelViewSettings(props){
         setKind(props.p_kind);
     },[props])
 
-    return(
-        <div className="pm_settings_panel">
-            <label className="pm_settings_label">分類方法</label>
-            <div className="perspective_model_view_settings">
-                {/*<label className="date_title" key="item_title-1">カテゴライズ方法</label>*/}
-                <label>
-                    <input type="radio" name="cwitems" id="id-0" value="PerspectiveModel" checked={model_kind === null || model_kind == "PerspectiveModel" } onChange={setChange} />
-                    &nbsp;キーワードマッチング&nbsp;&nbsp;
-                </label>
-                <label>
-                    <input type="radio" name="cwitems" id="id-1" value="AIPerspectiveModel" checked={model_kind == "AIPerspectiveModel"} onChange={setChange} />
-                    &nbsp;AIによる分類：全て
-                </label>
-                <label>
-                    <input type="radio" name="cwitems" id="id-2" value="AIPerspectiveModelHighPossibility" checked={model_kind == "AIPerspectiveModelHighPossibility"} onChange={setChange} />
-                    &nbsp;AIによる分類：高確度のみ
-                </label>
+    if(props.p_kind != 'InputValueModel'){
+        return(
+            <div className="pm_settings_panel">
+                <label className="pm_settings_label">分類方法</label>
+                <div className="perspective_model_view_settings">
+                    {/*<label className="date_title" key="item_title-1">カテゴライズ方法</label>*/}
+                    <label>
+                        <input type="radio" name="cwitems" id="id-0" value="PerspectiveModel" checked={model_kind === null || model_kind == "PerspectiveModel" } onChange={setChange} />
+                        &nbsp;キーワードマッチング&nbsp;&nbsp;
+                    </label>
+                    <label>
+                        <input type="radio" name="cwitems" id="id-1" value="AIPerspectiveModel" checked={model_kind == "AIPerspectiveModel"} onChange={setChange} />
+                        &nbsp;AIによる分類：全て
+                    </label>
+                    <label>
+                        <input type="radio" name="cwitems" id="id-2" value="AIPerspectiveModelHighPossibility" checked={model_kind == "AIPerspectiveModelHighPossibility"} onChange={setChange} />
+                        &nbsp;AIによる分類：高確度のみ
+                    </label>
+                </div>
             </div>
-        </div>
-    )
+        )
+    }
 }
 
 export default PerspectiveModelViewSettings;

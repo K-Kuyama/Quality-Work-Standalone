@@ -246,7 +246,7 @@ function CategoryPane3(props){
 	return(
 		<div className="category_pane">
 			{keyWordPane()}
-			{registeredPane()}			
+			{/* registeredPane() */}			
     	</div>
 	)
 }
