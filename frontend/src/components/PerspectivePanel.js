@@ -72,7 +72,7 @@ function PerspectivePanel(props){
 		return(
 			<>
 				<div className="perspectives">	
-					<div className="pp_header">
+					<div className="pp_header2">
 						<Button type="button" className="btn btn-ppheader" data-bs-toggle="button" size="sm" value="edit" 	onClick={handleShow}>
     						編集
     					</Button>

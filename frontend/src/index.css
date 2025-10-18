@@ -388,6 +388,7 @@
     /*background: #27293d;*/
     padding: 10px;
     padding-top: 20px;
+    margin-bottom: 30px;
 }
 
 .category-list {
@@ -446,6 +447,15 @@
 	justify-content: end;
 	padding-top: 4px;
     padding-bottom: 30px;
+}
+
+.pp_header2{
+    width: 100%;
+    display: flex;
+	flex-direction: row;
+	justify-content: end;
+	padding-top: 23px;
+    padding-bottom: 24px;
 }
 
 .pp_tail{
@@ -540,6 +550,7 @@
 .pm_settings_panel{
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
     width: 100%;
     margin-top: 30px;
     margin-bottom: 10px;
@@ -548,8 +559,8 @@
 }
 
 .pm_settings_label{
-    color:	white;
-    font-size: 12pt;
+    color:	rgba(255, 255, 255, 0.65);
+    font-size: 13pt;
     background-color: #575977;
     margin-left: 20px;
 }
@@ -565,13 +576,14 @@
     padding-right: 10px;
     margin-left: 20px;
     margin-right: 10px;
-    color:	rgba(255, 255, 255, 0.55);
+    /* color:	rgba(255, 255, 255, 0.55); */
+    color:	rgba(255, 255, 255, 0.85);
     background-color: #575977;
 }
 
 .perspective_model_view_settings > label{
-    margin-right: 30px;
-    font-size: 11pt;
+    margin-right: 34px;
+    font-size: 12pt;
 }
 
 /* TopBarControlPanel.js */

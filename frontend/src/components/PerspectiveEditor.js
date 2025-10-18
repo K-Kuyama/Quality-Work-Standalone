@@ -127,7 +127,7 @@ function PerspectiveEditor(props){
 	const editCButton = () =>{
 		if(showC == true){
 			return (
-				<Button className="btn-sm" variant="outline-primary" onClick={hideCedit}>カテゴリー編集　  <i class="bi bi-caret-up"></i> </Button>
+				<Button className="btn-sm" variant="outline-primary" onClick={hideCedit}>　　閉じる　　　  <i class="bi bi-x-lg"></i> </Button>
 			)
 		} else {
 			return (
