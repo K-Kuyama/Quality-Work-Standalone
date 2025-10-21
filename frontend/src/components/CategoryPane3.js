@@ -180,7 +180,7 @@ function CategoryPane3(props){
 
 	// キーワード登録用の画面をレンダリングする
 	const keyWordPane = () =>{
-		if (props.p_kind == 'PerspectiveModel'){ 
+		//if (props.p_kind == 'PerspectiveModel' || props.p_kind == null){ 
 			return(
 				<DndContext onDragEnd={handleDragEnd}>
 				
@@ -230,7 +230,7 @@ function CategoryPane3(props){
 				
 				</DndContext>
 			)
-		}
+		//}
 	}
 
 	const registeredPane = () =>{

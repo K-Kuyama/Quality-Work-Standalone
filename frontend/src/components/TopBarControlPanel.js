@@ -8,7 +8,7 @@ import ja from 'date-fns/locale/ja';
 
 
 function TopBarControlPanel(props){
-	const c_list = [["event_list","イベント一覧"],["title_list","画面タイトル一覧"]]; 
+	const c_list = [["event_list","アクティビティ一覧"],["title_list","画面タイトル一覧"]]; 
 	const [target_date, setDate] = useState(new Date())
 	//const [target_date, setDate] = useState();
 	const [target_item, setItem] = useState("event_list");
