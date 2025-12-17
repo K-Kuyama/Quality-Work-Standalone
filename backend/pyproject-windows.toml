@@ -21,6 +21,9 @@ pywin32 = "^308"
 pyaudio = "^0.2.14"
 numpy = "^2.3.0"
 scikit-learn = "^1.7.2"
+comtypes = "^1.4.14"
+pycaw = "^20251023"
+configobj = "^5.0.9"
 
 
 [build-system]
