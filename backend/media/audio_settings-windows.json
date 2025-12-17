@@ -7,7 +7,7 @@
     "RATE": 48000,
     "CHUNK": 1024,
     "Silence_threshold": 10,
-    "Start_frame_threshold": 5,
+    "Start_frame_threshold": 60,
     "End_frame_threshold": 30,
     "RETRY_INTERVAL": 30
 }
