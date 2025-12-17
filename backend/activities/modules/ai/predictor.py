@@ -6,10 +6,13 @@ Created on 2025/08/21
 
 import os
 import pickle
+#import logging
 #import MeCab
 #from sklearn.feature_extraction.text import TfidfVectorizer
 #from sklearn.metrics import classification_report
 from activities.modules.ai.util import tokenize, evaluation_report
+
+#logger = logging.getLogger('django')
 
 class Predictor:
 
@@ -27,6 +30,7 @@ class Predictor:
             self.vectorizer = pickle.load(veb)
         with open(os.path.join(self.location,'model.pickle'), 'rb') as reb:
             self.model = pickle.load(reb)
+        #logger.info(f"initialize predictor {self}")
 
     def get_name(self):
         return self.name

@@ -8,6 +8,8 @@ function AudioSettings(props){
     const [policy, setPolicy] = useState(0)
     const [id, setID] = useState(1)
 
+    const setParentPolicy = props.policy_handler;
+
     const c_list = [[0,"無効"],[1,"Audio優先"],[2,"Window優先"],[3,"個別設定"]]; 
 
     const ctx = useContext(ShowPolicyContext);
@@ -16,6 +18,7 @@ function AudioSettings(props){
         let item = Number(d.target.value);
         updateDB(item);
         setPolicy(item);
+        setParentPolicy(item);
         ctx.updatePolicy(item);
         console.log("selected item :"+item)
 
@@ -76,6 +79,7 @@ function AudioSettings(props){
             let res = JSON.parse(txt);
             console.log(res);
             setPolicy(res[0]['audio_activity_policy']);
+            setParentPolicy(res[0]['audio_activity_policy']);
             setID(res[0]['id'])
             setHaveData(true);
         })

@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db import connection
 from rest_framework import viewsets, generics
 from rest_framework.response import Response
 from rest_framework import serializers
@@ -13,7 +14,9 @@ from django.conf import settings
 import sqlite3
 import re
 import os
+import shutil
 
+from tenant_schemas.storage import TenantFileSystemStorage
 from system.models import DBUpdateHistory
 
 class DatabaseUploadSerializer(serializers.ModelSerializer):
@@ -122,7 +125,7 @@ class DBUpdateHistoryClearView(generics.ListAPIView):
         for entry in queryset:
             file_path = self.urlToFile(entry.contents.url)
             # アップロードされているファイルを消去
-            if file_path:
+            if file_path and os.path.exists(file_path):
                 os.remove(file_path)
         # エントリーを全て消去
         DBUpdateHistory.objects.all().delete()
@@ -301,17 +304,34 @@ class TableMigrationView(generics.ListAPIView):
 
 class InitDBView(generics.ListAPIView):
     # データベースを初期化。djangoのコマンドflushとloaddata(fixtureのロード)を実行する。
+    # 加えてAI関連のファイルを消去する
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required)) 
     def list(self, request, *args, **kwargs):
         sts = status.HTTP_202_ACCEPTED
         result = "success"
+        # データベースの初期化
         fixture = os.path.join(settings.BASE_DIR, 'fixture.json')
         try:
+            if settings.QT_MULTI:
+                # 念の為、データベースの接続先をtenant.schema_nameに設定
+                connection.set_schema(request.tenant.schema_name)
             management.call_command("flush", "--noinput")
             management.call_command("loaddata", fixture)
         except Exception as e:
             result = repr(e)
             sts = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return Response(result, status = sts)
+        # ファイル群の消去
+        predictors_dir = os.path.join(settings.MEDIA_ROOT, "predictors")
+        if settings.QT_MULTI:
+            storage = TenantFileSystemStorage()
+            predictors_dir = storage.path("predictors")
+        try:
+            shutil.rmtree(predictors_dir)
+        except Exception as e:
+            result = repr(e)
+            sts = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return Response(result, status = sts)
         return Response(result, status = sts)
 
 

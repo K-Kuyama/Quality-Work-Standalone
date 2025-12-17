@@ -6,7 +6,7 @@ authors = ["Kazuhiro Kuyama <kuyama@systemdesignk2.jp>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.15"
 django = "^5.1.2"
 djangorestframework = "^3.15.2"
 django-tenant-schemas = "^1.12.0"
@@ -21,6 +21,9 @@ pyaudio = "^0.2.14"
 numpy = "^2.3.0"
 pandas = "^2.3.3"
 scikit-learn = "^1.7.2"
+configobj = "^5.0.9"
+pyobjc-framework-coreaudio = "^12.1"
+pyinstaller = "^6.17.0"
 
 
 [build-system]

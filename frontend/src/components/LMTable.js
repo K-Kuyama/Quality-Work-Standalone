@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Cookies from "universal-cookie";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import LMCreateModal from "./LMCreateModal";
+import LMDeleteModal from "./LMDeleteModal";
 import Settings from "../Settings";
 
 function LMTable(props){
@@ -11,11 +12,26 @@ function LMTable(props){
     const [lm_list, setList] = useState([]);
 
     const [show, setShow] = useState(false);
+    const [dshow, setDShow] = useState(false);  // 削除時のモーダルの表示制御
     const [changed, setChanged] = useState(false);
+    const [pr_id, setPrID] = useState(0);   // 削除モーダル表示中、削除するpredictorのIDを保持
 
     const handleClose = () =>{
         setShow(false);
     }
+
+    const handleDClose = () =>{
+        setDShow(false);
+    }
+
+    const handleDelete = (e) =>{
+        e.target.value = pr_id; // 保持していたpredictorのIDをセットして渡す
+        delete_lm(e);
+        lmChanged(true);    // 使用中のpredictorが削除されたので、上位モジュールに通知
+        setDShow(false);    // 削除時のモーダルを非表示に
+        pr_id = 0;
+    }
+
 
     const lmChanged = props.handler;
 
@@ -24,17 +40,34 @@ function LMTable(props){
         lmChanged(value);
     }
 
+    const delete_by_condition = (e) =>{
+        //削除しようとしているpredictorが使用中の場合、確認用のモーダルを表示する
+        if (e.target.getAttribute('data-using')== "true"){
+            setPrID(e.target.value)
+            setDShow(true);
+        }
+        else {
+            delete_lm(e);
+        }
+
+    }
+
 
     const activate_lm = (e) =>{
         let target = Settings.HOME_PATH+'/api/AI/activate_predictor/'
         if(Settings.DEVELOP){
             target = Settings.DEVELOPMENT_HOME_PATH+'/api/AI/activate_predictor/'
         }
+        let cookies = new Cookies();
+        let token = cookies.get('csrftoken')
         let params ={p_id : props.p_id};
         let query = new URLSearchParams(params);
         fetch(target+ e.target.value+'/?'+query,{
                 method: 'PUT',
                 credentials: "same-origin",
+                headers: {
+					'X-CSRFToken': token,
+				},
             }
         )
         .then(response => {
@@ -60,11 +93,16 @@ function LMTable(props){
         if(Settings.DEVELOP){
             target = Settings.DEVELOPMENT_HOME_PATH+'/api/AI/destroy_activity_predictor/'
         }
+        let cookies = new Cookies();
+        let token = cookies.get('csrftoken')
         let params ={p_id : props.p_id};
         let query = new URLSearchParams(params);
         fetch(target+ e.target.value+'/?'+query,{
                 method: 'DELETE',
                 credentials: "same-origin",
+                headers: {
+					'X-CSRFToken': token,
+				},
             }
         )
         .then(response => {
@@ -193,13 +231,14 @@ function LMTable(props){
                             <div className="lm_score">{obj['score']}</div>
                             <div className="lm_buttons">
                                 <Button variant="outline-primary" size="sm" value={obj['id']} onClick={activate_lm}> 適用 </Button>
-                                <Button variant="outline-secondary" size="sm" value={obj['id']} onClick={delete_lm}> 削除 </Button>
+                                <Button variant="outline-secondary" size="sm" value={obj['id']} data-using={obj['using']} onClick={delete_by_condition}> 削除 </Button>
                             </div>
                         </div>
                     )
                 })}
             </div>
             <LMCreateModal show={show} p_id={props.p_id} handler={handleClose} set_changed={setChangedAll} activate={activate_lm}/>
+            <LMDeleteModal show={dshow} pr_id={pr_id} delete_handler={handleDelete}close_handler={handleDClose}/>
         </div>
     )
     }

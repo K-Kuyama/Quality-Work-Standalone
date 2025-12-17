@@ -110,6 +110,8 @@ a = Analysis(
         ('.venv/lib/python3.11/site-packages/scipy/integrate', 'scipy/integrate'),
         ('.venv/lib/python3.11/site-packages/scipy/interpolate', 'scipy/interpolate'),
         ('.venv/lib/python3.11/site-packages/scipy/ndimage', 'scipy/ndimage'),
+        # --- オーディオ関係 ---
+        ('.venv/lib/python3.11/site-packages/CoreAudio', 'CoreAudio'),
     ],
 
     hiddenimports=[

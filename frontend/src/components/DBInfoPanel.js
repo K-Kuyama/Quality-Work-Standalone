@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DBStat from "./DBStat";
 import Settings from "../Settings";
 
 function DBInfoPanel(props){
@@ -13,6 +14,7 @@ function DBInfoPanel(props){
 	
 	
 	useEffect(() => {
+		{/*
 		let target = Settings.HOME_PATH+'/api/Activity/activity_db_info/1/'
 		if(Settings.DEVELOP){
 			target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/activity_db_info/1/'
@@ -36,8 +38,13 @@ function DBInfoPanel(props){
 			console.error('----Error---');
 			console.error(error);
 		})
-		
-		fetch(Settings.HOME_PATH+'/api/Activity/file_upload/',{
+		*/}
+
+		let target = Settings.HOME_PATH+'/api/Activity/file_upload/'
+		if(Settings.DEVELOP){
+			target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/file_upload/'
+		}
+		fetch(target,{
 					credentials: "same-origin",
 				}
 		)
@@ -58,13 +65,17 @@ function DBInfoPanel(props){
 		})
 		
 		setChanged(false);
-		setTableChanged(false);
 				
 	},[props, tableChanged]);
 	
 	if(haveData){
 	return(
 		<div className="db_info_panel">
+			<div className="table_info_panel">
+				<DBStat table="activity" />
+				<DBStat table="audio" />
+			</div>
+			{/*
 			<div className="db_status">
 				<label>アクティビティーデータ情報</label>
 					<table className="db_table">
@@ -73,6 +84,7 @@ function DBInfoPanel(props){
 						<tr><td>データ数</td><td>{dbi['count']}</td></tr>
 					</table>
 			</div>
+			*/}
 			<div className="upload_info">
 				<label>ファイルアップロード情報</label>
 				<table className="db_table">

@@ -15,8 +15,12 @@ import csv
 import pickle
 import threading
 import shutil
+import logging
 
-from activities.models import ActivityPredictor
+from django.db.models import Value
+from django.db.models.functions import Concat
+from tenant_schemas.storage import TenantFileSystemStorage
+from activities.models import ActivityPredictor, CategorizedActivity, Activity, AudioActivity
 from activities.modules.ai.predictor import Predictor
 from activities.modules.ai.util import labelToName, labelToNameforList, tokenize
 
@@ -26,6 +30,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
+
+
+logger = logging.getLogger('django')
 
 # SQLiteへの接続
 def conn_to_db(db_name):
@@ -53,15 +60,24 @@ class PredictorManager:
     _lock = threading.Lock()
     #active_predictors = None
     db_file = os.path.join(settings.BASE_DIR, 'db.sqlite3')
+    format_str = "%Y-%m-%d %H:%M:%S.%f"
     # mecab = None
     janome_t = None
-    predictors_dir = os.path.join(settings.MEDIA_ROOT, "predictors")
+    predictors_dir = None
 
     def __init__(self):
 
         self.janome_t = self.__class__.janome_t
         self.active_predictors = self.__class__.active_predictors
-
+        # predictorsフォルダを作る位置を設定する。マルチテナントの場合は、
+        # テナントごとのフォルダにpredictorsディレクトリを作るために、
+        # storage.path("predictors")でこのディレクトリの絶対パスを取得
+        if settings.QT_MULTI:
+            storage = TenantFileSystemStorage()
+            self.predictors_dir = storage.path("predictors")
+            logger.info(f"predictors dir -> {self.predictors_dir}")
+        else :
+            self.predictors_dir = os.path.join(settings.MEDIA_ROOT, "predictors")
         
     def __new__(cls):
         with cls._lock:
@@ -75,11 +91,14 @@ class PredictorManager:
     def get_predictor(self, p_id):
         # すでにアクティブになっているpredictorがあるか調べる
         predictor = self.active_predictors.get(p_id)
+        
         if not predictor:
              # なければファイルからロードする
             predictor = self.load_predictor(p_id)
+            #logger.info(f"{p_id}:set predictor ->{predictor}")
              # アクティブになっているpredictorとして登録する
             self.active_predictors[p_id] = predictor
+            #logger.info(f"{p_id}:set predictor ->{predictor}")
         return predictor
     
 
@@ -107,7 +126,7 @@ class PredictorManager:
     def delete_predictor(self, p_id, p_name):
         ap = self.active_predictors.get(p_id)
 
-        if ap != None and p_name == ap.get_name():
+        if not p_id or not p_name:
             return False
         else:
             p = ActivityPredictor.objects.get(p_id=p_id, name=p_name)
@@ -248,6 +267,94 @@ class PredictorManager:
         shutil.rmtree(location)
 
 
+    def get_registered_activities(self, p_id):
+        # データベースからカテゴリーに登録されたアクティビティ情報を取り出し以下の型のdictにする
+        # {atitle:xxx, category_id:xxx, name:xxx}
+        queryset = CategorizedActivity.objects.select_related(
+                    "category").filter(
+                        category__perspective_id=p_id
+                        ).annotate(atitle=Concat('app', Value(' '), 'title'))
+        rows = []
+        for ac in queryset:
+            rows.append({'atitle': ac.atitle,'category_id':ac.category.id, 'name':ac.category.name})
+        return rows
+    
+    def get_audio_activities(self, start, end):
+        # オーディオアクティビティを取り出し、文字列を加工しatitle属性に格納したdictのリストを返す
+        queryset = AudioActivity.objects.all()
+        a_activities = None
+        if start == None:
+            if end == None:
+                a_activities = queryset
+            else:
+                a_activities = queryset.filter(start_time__lte=datetime.strptime(end, self.format_str))
+        else:
+            if end == None:
+                a_activities = queryset.filter(start_time__gte=datetime.strptime(start, self.format_str))
+            else:
+                a_activities = queryset.filter(start_time__gte=datetime.strptime(start, self.format_str),
+                                                start_time__lte=datetime.strptime(end, self.format_str))
+        a_activity_rows = []
+        app = ""
+        title = ""
+        for aac in a_activities:
+            if aac.selected == 0:
+                app = aac.start_app
+                title = aac.start_title
+            elif aac.selected == 1:
+                app = aac.longest_app
+                title = aac.longest_title
+            else:
+                app = aac.another_app
+                title = aac.another_title
+            a_activity_rows.append({'atitle':'audio_stream '+app+':'+title})
+        return a_activity_rows
+
+    def create_learning_data(self, p_id, start=None, end=None, data_source="Activity"):
+        # CategorizedActivityとして登録されている項目とマッチするアクティビティを取り出し、
+        # [アプリ名+タイトル, category-id, category名]からなる行のリストを作る
+        # data_source が'Activity'の時は通常のCategorizedActivityテーブルを使い、'ActivityEval'の場合は
+        # ategorizedActivityEvalテーブルを使う (このスイッチは今は使われていないが残してある)
+
+        categorize_rows = self.get_registered_activities(p_id)
+
+        if data_source == "CategorizedActivity":
+            return categorize_rows
+        
+        else:
+            queryset = Activity.objects.annotate(atitle=Concat('app', Value(' '), 'title'))
+            activities = None
+            if start == None:
+                if end == None:
+                    activities = queryset
+                else:
+                    activities = queryset.filter(start_time__lte=datetime.strptime(end, self.format_str))
+            else:
+                if end == None:
+                    activities = queryset.filter(start_time__gte=datetime.strptime(start, self.format_str))
+                else:
+                    activities = queryset.filter(start_time__gte=datetime.strptime(start, self.format_str),
+                                                 start_time__lte=datetime.strptime(end, self.format_str))
+            activity_rows = []
+            for ac in activities:
+                activity_rows.append({'atitle': ac.atitle})
+        
+            # オーディオアクティビティを取り出し、これを追加する
+            a_activity_rows = self.get_audio_activities(start, end)
+            activity_rows.extend(a_activity_rows)
+
+        rows = []
+        for row in activity_rows:
+            matched = next((r for r in categorize_rows if r['atitle']==row['atitle']), None)
+            if matched:
+                rows.append({'title': row['atitle'], 'category_id': matched['category_id'], 
+                                        'name': matched['name']})
+        #return df
+        return rows
+            
+#以下はSQL文を直に発行してデータを取り出すV3.0で使っていたコードだが、postgreSQLにも対応するために
+# ORMを使うように変更したので、今後は使わない。
+'''
     def create_learning_data(self, p_id, start=None, end=None, data_source="Activity"):
         # CategorizedActivityとして登録されている項目とマッチするアクティビティを取り出し、
         # [アプリ名+タイトル, category-id, category名]からなる行のリストを作る
@@ -304,3 +411,4 @@ class PredictorManager:
                                             'name': matched['name']})
             #return df
             return rows
+'''

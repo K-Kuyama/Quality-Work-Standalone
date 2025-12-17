@@ -42,7 +42,18 @@ def get_title(au):
 def get_combined_activities(start_time, end_time, audio_policy):
     #print(f"audio_policy = {audio_policy}")
     # 指定時間の間のwindowイベントとaudioイベントを結合して、windowイベントのリストとして出力
-    q_activities = Activity.objects.filter(start_time__gte=start_time, start_time__lte=end_time
+
+    q_activities = None
+    if start_time == None:
+        if end_time == None:
+            q_activities = Activity.objects.exclude(title="blank").order_by("start_time")
+        else:
+            q_activities = Activity.objects.filter(start_time__lte=end_time).exclude(title="blank").order_by("start_time")
+    else:
+        if end_time == None:
+            q_activities = Activity.objects.filter(start_time__gte=start_time).exclude(title="blank").order_by("start_time")
+        else:    
+            q_activities = Activity.objects.filter(start_time__gte=start_time, start_time__lte=end_time
                                         ).exclude(title="blank").order_by("start_time")
     activities =[]
     for act in q_activities:

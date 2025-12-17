@@ -7,6 +7,7 @@ import AudioSettings from "../components/AudioSettings";
 /* アクティビティーリストページ */
 function AudioActivityPage(){
     const [target_date, setDate] = useState(new Date());
+    const [policy, setPolicy] = useState(0);
     //const [item, setItem] = useState("event_list");
 
 
@@ -20,7 +21,7 @@ function AudioActivityPage(){
 
 	return(
         <div className="top_app">
-            <AudioSettings />
+            <AudioSettings policy_handler={setPolicy} />
             <div className="app_page">
                 <div className="sidebar">
                     <div id="a-controls" className="controls">
@@ -31,7 +32,7 @@ function AudioActivityPage(){
                     </div>
                 </div>
                 <div className="contents">
-                    <AudioActivityTable target_date={target_date} />  
+                    <AudioActivityTable target_date={target_date} idv_policy={policy} />  
                 </div>
             </div>
         </div>

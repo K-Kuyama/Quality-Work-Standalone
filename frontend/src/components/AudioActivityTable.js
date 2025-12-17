@@ -10,10 +10,12 @@ function AudioActivityTable(props){
     const [haveData, setHaveData] = useState(false); 
     const [target_date, setDate] = useState(props.target_date);
     const [item, setItem] = useState(props.item);
+    const [font_color, setColor] = useState("rgba(255, 255, 255, 0.55)")
 
     /* propsに変更があった時に呼び出される */
     
     useEffect(() => {
+        //console.log("policy->", props.idv_policy)
         setDate(props.target_date);
         // 表示すべきターゲットデートがない場合は、サーバへの呼び出しをしない。
         if(target_date){		
@@ -50,8 +52,22 @@ function AudioActivityTable(props){
             })
         }
     },[props]);
-    
 
+    useEffect (() =>{
+        let elements = document.querySelectorAll(".audio_show_policy_t");
+        if (props.idv_policy === 3){
+            elements.forEach((e) => {
+                e.disabled = false;
+                setColor("rgba(255, 255, 255, 0.55)")
+            })}
+        else {
+            elements.forEach((e) => {
+                e.disabled = true;
+                setColor("rgba(255, 255, 255, 0.15)")
+            })
+        }
+
+    },[props]);
 
 
 	if (!haveData) {
@@ -63,13 +79,13 @@ function AudioActivityTable(props){
                     <div className="audio_time_column_t">開始時間/終了時間</div>
                     <div className="audio_duration_t">継続時間</div>
                     <div className="audio_title_column_t">タイトル</div>
-                    <div className="audio_show_policy_t">ポリシー</div>
+                    <div className="audio_show_policy_t" style={{color: font_color}}>個別設定</div>
                     <div className="audio_save_t"></div>
                 </div>
 				{
                     data.map((a) => {
                         return(
-                            <AudioActivityTag data={a} />
+                            <AudioActivityTag data={a} idv_policy={props.idv_policy} />
                         );
                     })
                 }

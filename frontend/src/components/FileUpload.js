@@ -9,7 +9,7 @@ const baseStyle = {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "40%",
-    height: 60,
+    height: 80,
 };
 const borderNormalStyle = {
     border: "2px dotted #888",
@@ -33,9 +33,12 @@ function FileUpload(props) {
 	const [csv_data, setCSV] = useState([]);
 	const [csv_info, setInfo] = useState([]);
 	const [target_file, setFile] = useState([]);
+	const [file_kind, setKind] = useState("");
 	//const [userid, setUserid] = useState(0);
 	
 	const setChanged = props.setChanged;
+
+	const file_category ={activity:"アクティビティファイル", audio:"音声アクティビティファイル", incorrect:"不明なファイル（アップロードできません）"}
 	
     const onDrop = useCallback((acceptedFiles) => {
         // Do something with the files
@@ -106,7 +109,10 @@ function FileUpload(props) {
 		if(Settings.DEVELOP){
 			target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/file_upload/'
 		}
-		fetch(target, {
+		let params = {table : file_kind};
+		let query = new URLSearchParams(params);
+
+		fetch(target + '?' + query, {
 			method : 'POST',
 			credentials: "same-origin",
 			headers: {
@@ -151,7 +157,17 @@ function FileUpload(props) {
     	reader.readAsText(file);
   	}
  
- 
+	const cancelUpload = (e) =>{
+		setVisibility(false);
+		setDisable(false);
+	}
+
+	// Uploadボタンのenable/disable状態をセットする
+	const setDisable =(value) =>{
+		let button = document.querySelector(".upload_b");
+		button.disabled = value;
+	}
+
 // CSVデータを処理する関数
 	const processData = (csvData) =>{
     	// CSVデータを行に分割
@@ -159,11 +175,33 @@ function FileUpload(props) {
 
     	// 各行をカンマで分割し、2次元配列に変換
     	const data = rows.map(row => row.split(","));
-    	// 最後の行は空行になっているので、これを除外
-    	data.length = data.length-1;
-    	//最初の時刻と最後の時刻とデータ数を取り出す
-    	let count = data.length;
-    	const dataInfo = [data[0][0], data[count-1][0], count];
+		let dataInfo = ["-", "-", 0];
+		// 最後の行は空行になっているので、これを除外
+		data.length = data.length-1;
+		if (data.length > 0){
+			console.log("length :", data[0].length);
+			if(data[0].length == 8){
+				setKind("activity");
+				//最初の時刻と最後の時刻とデータ数を取り出す
+				let count = data.length;
+				dataInfo = [data[0][0], data[count-1][0], count];
+			}
+			else if(data[0].length == 11){
+				setKind("audio");
+				//最初の時刻と最後の時刻とデータ数を取り出す
+				let count = data.length;
+				dataInfo = [data[0][0], data[count-1][0], count];
+			}
+			else {
+				setKind("incorrect");
+				setDisable(true);
+			}
+
+		}
+		else{
+			setKind("incorrect");
+			setDisable(true);
+		}
     	return dataInfo;
   	}
    
@@ -181,12 +219,13 @@ function FileUpload(props) {
         	{isVisible ?
  			<div className="info_board">
  				<div className="file_contents_info">
+					<label className="upload_kind">{file_category[file_kind]}</label>
  					<label>From: {csv_info[0]} </label>
  					<label>To: {csv_info[1]} </label>
  					<label>データ数{csv_info[2]}</label>
  				</div>
     			<Button variant="primary" className="upload_b" onClick={(e)=> sendFormData(e)} ><i class="bi-upload" ></i>アップロード</Button>
-    			<Button variant="secondary" className="cancel_b" onClick={(e)=> setVisibility(false)} ><i class="bi-arrow-left-square"></i>中止</Button>
+    			<Button variant="secondary" className="cancel_b" onClick={(e)=> cancelUpload(e)} ><i class="bi-arrow-left-square"></i>中止</Button>
     		</div>
     		: <></>}
         </div>

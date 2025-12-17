@@ -11,6 +11,7 @@ function SettingsEditor(props){
     const [haveData, setHaveData] = useState(false); 
     const [redraw, setRedraw] = useState(false)
 
+    const valid_items = ["Poll_time", "Start_frame_threshold", "RETRY_INTERVAL"]
 
     const reset = () =>{
         setItems([]);
@@ -118,7 +119,17 @@ function SettingsEditor(props){
         }
     }
 
-
+    const show_valid_item = (item, idx) =>{
+        if(valid_items.includes(item[0])){
+            return (<tr>
+                        <td width="24px"><input type="checkbox" name="c_item" value={idx} onChange={(e)=>setEnable(e)} /></td>
+                        <td width="220pt"><label className="setting-label" id={"slb-"+idx} value={item[0]}>{item[0]}</label></td>
+                        <td width="240pt"><input type="text" className="setting-text" id={"stx-"+idx} defaultValue={item[1]} dataType={typeof(item[1])} disabled></input></td>
+                    </tr>)
+        } else {
+            return(<div></div>)
+        }
+    }
 
     useEffect(() => {
         getSettings();
@@ -134,13 +145,9 @@ function SettingsEditor(props){
                 <label className="settings-title"> {titles[props.category]} </label>
                 <hr size="5" width="100%" color="white" ></hr>
                 {
-                    items.map((item, idx) =>{
-                        return (<tr>
-                                    <td width="24px"><input type="checkbox" name="c_item" value={idx} onChange={(e)=>setEnable(e)} /></td>
-                                    <td width="220pt"><label className="setting-label" id={"slb-"+idx} value={item[0]}>{item[0]}</label></td>
-                                    <td width="240pt"><input type="text" className="setting-text" id={"stx-"+idx} defaultValue={item[1]} dataType={typeof(item[1])} disabled></input></td>
-                        </tr>)
-                    })
+                    items.map((item, idx) =>
+                        show_valid_item(item, idx)
+                    )
                 }
                 <div className="ce_header">
                     <Button type="button" className="btn btn-ppheader" data-bs-toggle="button" size="sm" onClick={(e)=> setChangedValues()} >

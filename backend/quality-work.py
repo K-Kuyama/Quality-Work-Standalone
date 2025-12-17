@@ -34,8 +34,11 @@ def handler(signum, frame):
 #def term_handler(signum, frame):
 def term_handler():
     # SIGTERMを受け取った場合にaudio_watcherを再起動する。
+    global auw
     print("restart audio_watcher.")
     stop_event.set()
+    auw.join()        # ← 完全停止を待つ
+    stop_event.clear()
     #time.sleep(5)
     auw = threading.Thread(target=audio_watcher_start, args=(stop_event,), daemon=False)
     auw.start()

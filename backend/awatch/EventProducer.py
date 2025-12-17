@@ -173,12 +173,15 @@ class HttpEventProducer(EventProducer):
             try:
                 print(self.post_url+local_path+"bulk/")
                 print(self.request_pool)
-                response = self.session.post(self.post_url+local_path+"bulk/",  headers=headers, json=self.request_pool)
+                response = self.session.post(self.post_url+local_path+"bulk/",
+                                            headers=headers, json=self.request_pool, allow_redirects=False)
                 response.raise_for_status()
-                #response = self.session.post(self.post_url+"Activity/bulk/",  headers=headers, json=self.request_pool)
-                print(f"{response} : {self.request_pool}")
-                #print(response.status_code)
-                self.request_pool =[]
+                if response.status_code == HTTPStatus.FOUND:
+                   if self.multi:
+                        self.getSession()
+                else:
+                    print(f"{response} : {self.request_pool}")
+                    self.request_pool =[]
             except requests.exceptions.ConnectionError:
                 print("ConnectinError")
             except requests.exceptions.HTTPError as e:
@@ -189,21 +192,18 @@ class HttpEventProducer(EventProducer):
                         self.getSession()
         else:
             try:
-                response = self.session.post(self.post_url+local_path,  headers=headers, json=request_body)
+                response = self.session.post(self.post_url+local_path,
+                                            headers=headers, json=request_body, allow_redirects=False)
                 response.raise_for_status()
-                #response = self.session.post(self.post_url+"Activity/",  headers=headers, json=request_body)
-                #print(response)
-                #print(response.status_code)
-                #print(response.text)
-                #print(response.headers)
-                #print(response.cookies)
-            except requests.exceptions.ConnectionError:
-#                print("ConnectinError")
+                if response.status_code == HTTPStatus.FOUND:
+                    self.hasSession = False
+                    self.request_pool.append(request_body)
+            except requests.exceptions.ConnectionError as e:
+                print(f"ConnectinError {e}")
                 self.hasSession = False
                 self.request_pool.append(request_body)
             except requests.exceptions.HTTPError as e:
-                print("HttpError")
-                print(e)
+                print(f"HttpError {e}")
                 if(e.response.status_code == HTTPStatus.FORBIDDEN):
                     self.hasSession = False
                 if(e.response.status_code == HTTPStatus.BAD_REQUEST):
@@ -256,7 +256,7 @@ class HttpEventProducer(EventProducer):
 
 
 class FileEventProducer(EventProducer):
-    def __init__(self, path, encoding, period, time_zone):
+    def __init__(self, path, encoding, period, time_zone, prefix=""):
         
         self.encoding = encoding
         self.period = period
@@ -266,16 +266,19 @@ class FileEventProducer(EventProducer):
         self.end_time = None
         self.file = None
         self.writer = None
-
-
+        self.suffix = prefix
+        self.request_pool =[]
 
         # 現在時間を取得
         now_time = datetime.now(ZoneInfo(self.time_zone))
  
         # ファイル名を生成する。       
         base_time = self.getBaseTime(now_time)
-        self.filename = self.path+"qt-"+base_time.strftime("%Y-%m-%d")+".csv"      
-         
+        self.filename = self.path+"qt-"+self.suffix+base_time.strftime("%Y-%m-%d")+".csv"      
+        
+        # ファイルを生成するディレクトリがなければ生成する
+        os.makedirs(self.path, exist_ok=True)
+
         # ファイルをオープンする。すでにファイルが存在する場合は、ファイル末尾から追記していく。
         #print(f"file name ={self.filename}")
         if not os.path.exists(self.filename):
@@ -326,7 +329,7 @@ class FileEventProducer(EventProducer):
             self.writer = None
             self.file.close()
             # ファイルをオープンする。すでにファイルが存在する場合は、ファイルを書き換え。
-            self.filename = self.path+"qt-"+start_time.strftime("%Y-%m-%d")+".csv"
+            self.filename = self.path+"qt-"+self.suffix+start_time.strftime("%Y-%m-%d")+".csv"
             self.file = open(self.filename, 'w', encoding=self.encoding, errors='none')
             self.writer = csv.writer(self.file)
             # ファイルローテートする時間をend_timeに設定する
@@ -334,12 +337,17 @@ class FileEventProducer(EventProducer):
  
            
     def createEvent(self, ar, last_window, end_time):
+        #ウインドウイベント情報を書き込む
         event_data = ar.get_data()
         start_time = ar.start_time
         if end_time :
             duration = end_time - start_time
         else :
             duration = datetime.now(ZoneInfo(self.time_zone)) - start_time
+        # ファイルローテートのチェック
+        if self.period:
+            self.checkDate(start_time)
+
         event_data['window'] = last_window
         self.writer.writerow([
             start_time.strftime("%Y-%m-%d %H:%M:%S.%f%z"),
@@ -352,10 +360,39 @@ class FileEventProducer(EventProducer):
             event_data['window']['title']
             ])
         self.file.flush()
+
+
+
+    def createAudioActivityEvent(self, window, start_time, end_time):
+        #音声が使われていた期間の情報をAudioActivityイベントとしてファイルに書き込む。
+        #windowは、音声が流れ始めた時にアクティブだったウインドウ
+        duration = end_time - start_time
+        title_str = window['title']
+        if(len(title_str) > 0 ):
+            if(len(title_str) > 256 ):
+                title_str = title_str[:256]
+        else:
+            title_str ="NONE"
         # ファイルローテートのチェック
         if self.period:
             self.checkDate(start_time)
-        
+            
+        self.writer.writerow([
+            start_time.strftime("%Y-%m-%d %H:%M:%S.%f%z"),
+            end_time.strftime("%Y-%m-%d %H:%M:%S.%f%z"),
+            duration.seconds,
+            window['app'],
+            title_str,
+            None,None,
+            None,None,
+            None,None
+        ])
+        self.file.flush()
+
+
+    def flushEvents(self):
+        return
+
     def createBlankEvent(self, bp):
         start_time = bp.start_time
         duration = datetime.now(ZoneInfo(self.time_zone)) - start_time

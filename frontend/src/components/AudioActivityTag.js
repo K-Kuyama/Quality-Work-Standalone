@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import Settings from "../Settings";
 import Cookies from "universal-cookie";
@@ -10,6 +10,7 @@ function AudioActivityTag(props){
     const [title, setTitle] = useState(props.data['another_title']);
     const [selected_title, setSelectedTitle] = useState(props.data['selected']);
     const [show_policy, setShowPolicy] = useState(props.data['show_policy']);
+    const [font_color, setColor] = useState("rgba(255, 255, 255, 0.55)")
 
     const handleApp = (e) => setApp(e.target.value);
     const handleTitle = (e) => setTitle(e.target.value);
@@ -68,8 +69,24 @@ function AudioActivityTag(props){
         })
     }
 
+    useEffect (() =>{
+        let elements = document.querySelectorAll("#id-audio-front, #id-audio-back, #id-audio-ignore");
+        if (props.idv_policy === 3){
+            elements.forEach((e) => {
+                e.disabled = false;
+                setColor("rgba(255, 255, 255, 0.55)")
+            })}
+        else {
+            elements.forEach((e) => {
+                e.disabled = true;
+                setColor("rgba(255, 255, 255, 0.15)")
+            })
+        }
+
+    },[props]);
 
     if(props.data){
+        console.log("color : ", font_color);
         return(
             <div className="audio_activity_tag">
                 <div className="audio_time_column">
@@ -101,11 +118,11 @@ function AudioActivityTag(props){
                     </div>
                 </div>
                 <div className="audio_show_policy">
-                        <label><input type="radio" name={"audio_show_policy"+props.data['id']} id="id-audio-front" value="0" checked={show_policy === 0} onChange={setPolicy}></input>
+                        <label style={{color: font_color}}><input type="radio" name={"audio_show_policy"+props.data['id']} id="id-audio-front" value="0" checked={show_policy === 0} onChange={setPolicy}></input>
                         &nbsp;Audio優先 </label>
-                        <label><input type="radio" name={"audio_show_policy"+props.data['id']} id="id-audio-back" value="1" checked={show_policy  === 1} onChange={setPolicy}></input>
+                        <label style={{color: font_color}}><input type="radio" name={"audio_show_policy"+props.data['id']} id="id-audio-back" value="1" checked={show_policy  === 1} onChange={setPolicy}></input>
                         &nbsp;Window優先 </label>
-                        <label><input type="radio" name={"audio_show_policy"+props.data['id']} id="id-audio-ignore" value="2" checked={show_policy  === 2} onChange={setPolicy}></input>
+                        <label style={{color: font_color}}><input type="radio" name={"audio_show_policy"+props.data['id']} id="id-audio-ignore" value="2" checked={show_policy  === 2} onChange={setPolicy}></input>
                         &nbsp;無効 </label>
                 </div>
                 <div className="audio_save">

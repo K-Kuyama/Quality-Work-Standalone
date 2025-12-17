@@ -24,8 +24,8 @@ from .WindowInfo import get_window_info
 import requests
 import configparser
 
-from awatch.EventProducer import FileEventProducer, HttpEventProducer 
-
+from awatch.EventProducer import FileEventProducer, HttpEventProducer
+from awatch.ConfigManager import ConfigManager
 
 
 class ActionRecorder:
@@ -126,7 +126,7 @@ class BlankPeriod:
 
 
 
-def aw_start():
+def aw_start(stand_alone = False):
     '''
     メインプログラム。ウインドウ情報を取得し、前回のループで取得したものと比較。
     '''
@@ -146,15 +146,21 @@ def aw_start():
     FILE_ROTATE = None
     CONFIG_FILE = 'config.ini'
     TIME_ZONE = "UTC"
+    poll_time = 1
 
     '''
     設定ファイルからの読み込み処理
     '''
-    if not os.path.exists(CONFIG_FILE):
-        poll_time = 1
-    else:
-        config_ini = configparser.ConfigParser()
-        config_ini.read(CONFIG_FILE, encoding='utf-8')
+#    if not os.path.exists(CONFIG_FILE):
+#        poll_time = 1
+#    else:
+
+    #config_ini = configparser.ConfigParser()
+    #config_ini.read(CONFIG_FILE, encoding='utf-8')
+
+    if stand_alone:
+        config_ini = ConfigManager()
+        
         try:  
             poll_time = int(config_ini.get('DEFAULT','Poll_time'))
         except (configparser.NoSectionError,configparser.NoOptionError):
@@ -185,6 +191,8 @@ def aw_start():
             print("Password not defined")
         try:
             DATA_FILE_PATH = config_ini.get('DEFAULT','Data_file_path')
+            if DATA_FILE_PATH.startswith("./"):
+                DATA_FILE_PATH = os.path.join(str(config_ini.config_dir), DATA_FILE_PATH.replace("./", ""))
         except (configparser.NoSectionError,configparser.NoOptionError):
             print("Data_file_path not defined")
         try:

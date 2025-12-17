@@ -49,7 +49,8 @@ function LMCreateModal(props){
         if(Settings.DEVELOP){
             target = Settings.DEVELOPMENT_HOME_PATH+'/api/AI/create_activity_predictor/'
         }
-        
+        let cookies = new Cookies();
+        let token = cookies.get('csrftoken')
         console.log('start:',start)
         console.log('end:',end)
 
@@ -77,6 +78,9 @@ function LMCreateModal(props){
         fetch(target+'?'+query,{
                 method: 'POST',
                 credentials: "same-origin",
+                headers: {
+					'X-CSRFToken': token,
+				},
             }
         )
         .then(response => {
