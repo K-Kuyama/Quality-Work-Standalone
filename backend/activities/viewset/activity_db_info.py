@@ -8,7 +8,7 @@ Created on 2024/09/09
 from rest_framework import generics
 from django.db.models import Count, Max, Min
 from rest_framework.response import Response
-from activities.models import Activity
+from activities.models import Activity, AudioActivity
 from activities.serializers.activity_db_info_serializer import ActivityDbInfoSerializer
 from datetime import datetime
 
@@ -31,8 +31,14 @@ class ActivityDbInfoView(generics.RetrieveAPIView):
 
     @attach_decorator(settings.QT_MULTI,method_decorator(login_required)) 
     def retrieve(self, request, *args, **kwargs):
+        tb = "activity"
+        params = self.request.query_params
         #self.queryset = self.queryset.all()
-        qsall = self.get_queryset()
+        #qsall = self.get_queryset()
+        qsall = Activity.objects.all() 
+        if 'table' in params:
+            if params.get('table').lower() == 'audio':
+                qsall = AudioActivity.objects.all() 
         qs = qsall.aggregate(Min('start_time'), Max('start_time'), Count('id'))
         # dictをオブジェクトに変換する
         instance = ActivityDbInfo(qs['start_time__min'], qs['start_time__max'], qs['id__count'])
