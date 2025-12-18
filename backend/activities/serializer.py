@@ -68,7 +68,7 @@ class CreateAudioActivityListSerializer(serializers.ListSerializer):
         result = [AudioActivity(**attrs) for attrs in validated_data]
         AudioActivity.objects.bulk_create(result)
         return result
-
+    
 class AudioActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -77,7 +77,35 @@ class AudioActivitySerializer(serializers.ModelSerializer):
         #          'longest_app','longest_title','another_app','another_title')
         fields = "__all__"
         list_serializer_class = CreateAudioActivityListSerializer
+
+class FormattedAudioActivitySerializer(serializers.ModelSerializer):
+
+    start_time = serializers.SerializerMethodField(read_only=True)
+    end_time = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = AudioActivity
+        #fields = ('start_time','end_time','duration','start_app','start_title',
+        #          'longest_app','longest_title','another_app','another_title')
+        fields = "__all__"
+        list_serializer_class = CreateAudioActivityListSerializer
     
+    def get_start_time(self, obj):
+        if(obj.start_time):
+            st = obj.start_time.astimezone(gettz(settings.TIME_ZONE))
+            return st.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            return ""
+    
+    def get_end_time(self, obj):
+        if(obj.end_time):
+            et = obj.end_time.astimezone(gettz(settings.TIME_ZONE))
+            return et.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            return ""
+
+
+
 # AI関連
 
 class ActivityPredictorSerializer(serializers.ModelSerializer):

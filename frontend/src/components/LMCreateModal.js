@@ -122,7 +122,7 @@ function LMCreateModal(props){
                 )
             } else {
                 return(
-                    <div>生成に失敗しました。&nbsp;list['detail']</div>
+                    <div>生成に失敗しました。&nbsp;{list['detail']}</div>
                 )
             }
         }else {

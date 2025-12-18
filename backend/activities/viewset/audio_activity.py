@@ -11,7 +11,7 @@ from django.db.models import Sum
 from django.db.models.functions import Trunc
 
 from activities.models import Activity, AudioActivity
-from activities.serializer import AudioActivitySerializer
+from activities.serializer import AudioActivitySerializer, FormattedAudioActivitySerializer
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -86,7 +86,7 @@ class CreateAudioActivityView(generics.CreateAPIView):
 
 
 class AudioActivityView(generics.ListAPIView):
-    serializer_class = AudioActivitySerializer
+    serializer_class = FormattedAudioActivitySerializer
     format_str = "%Y-%m-%d %H:%M:%S.%f"
 
     def get_queryset(self):

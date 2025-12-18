@@ -1224,9 +1224,17 @@ input#perspective_color{
 	color: #fffafa;
 }
 
+.table_info_panel{
+    width: 100%;
+    display: flex;
+	flex-direction: row;
+    /*justify-content: space-between;*/
+}
+
 .db_status{
-	width: 30%;
+	width: 32%;
 	margin-bottom: 30px;
+    margin-right: 60px;
 }
 
 .db_table{
@@ -1269,6 +1277,11 @@ input#perspective_color{
 	flex-direction: column;
 	justify-content: start;
 	align-items: start;
+}
+
+.upload_kind{
+    font-size: 12pt;
+    color: blue;
 }
 
 .upload_b{
@@ -1321,7 +1334,7 @@ input#perspective_color{
 
 .audio_time_column_t{
     font-size: 10pt;
-    width: 25%;
+    width: 20%;
 }
 .audio_duration_t{
     font-size: 10pt;
@@ -1330,19 +1343,20 @@ input#perspective_color{
 
 .audio_title_column_t{
     font-size: 10pt;
-    width: 50%;
+    width: 55%;
 }
 .audio_show_policy_t{
     font-size: 10pt;
     width: 10%;
 }
-.audio_save{
+
+.audio_save_t{
     font-size: 10pt;
     width: 8%;
 }
 
 .audio_time_column{
-    width: 25%;
+    width: 20%;
     font-size: 8pt;
 }
 
@@ -1353,8 +1367,18 @@ input#perspective_color{
 
 
 .audio_title_column{
-    width: 50%;
+    width: 55%;
     font-size: 8pt;
+}
+
+.audio_show_policy{
+    font-size: 10pt;
+    width: 10%;
+}
+
+.audio_save{
+    font-size: 10pt;
+    width: 8%;
 }
 
 .audio_input_app{
@@ -1632,6 +1656,13 @@ th{
 .custom-modal-title{
     font-size: 18px;
 }
+
+
+#id-audio-front:disabled {
+  accent-color: #17192d;
+}
+
+
 
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 
