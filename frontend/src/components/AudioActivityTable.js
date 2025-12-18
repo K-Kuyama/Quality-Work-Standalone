@@ -10,11 +10,24 @@ function AudioActivityTable(props){
     const [haveData, setHaveData] = useState(false); 
     const [target_date, setDate] = useState(props.target_date);
     const [item, setItem] = useState(props.item);
-    const [font_color, setColor] = useState("rgba(255, 255, 255, 0.55)")
+    const [font_color, setColor] = useState("rgba(255, 255, 255, 0.15)")
 
     /* propsに変更があった時に呼び出される */
     
     useEffect(() => {
+        // props.idv_policy === 3以外の場合「個別設定」部分をマスク
+        let elements = document.querySelectorAll(".audio_show_policy_t");
+        if (props.idv_policy === 3){
+            elements.forEach((e) => {
+                e.disabled = false;
+                setColor("rgba(255, 255, 255, 0.55)")
+            })}
+        else {
+            elements.forEach((e) => {
+                e.disabled = true;
+                setColor("rgba(255, 255, 255, 0.15)")
+            })
+        }
         //console.log("policy->", props.idv_policy)
         setDate(props.target_date);
         // 表示すべきターゲットデートがない場合は、サーバへの呼び出しをしない。
@@ -53,6 +66,7 @@ function AudioActivityTable(props){
         }
     },[props]);
 
+    /*
     useEffect (() =>{
         let elements = document.querySelectorAll(".audio_show_policy_t");
         if (props.idv_policy === 3){
@@ -68,7 +82,7 @@ function AudioActivityTable(props){
         }
 
     },[props]);
-
+*/
 
 	if (!haveData) {
 		return <div>Loading...</div>
