@@ -16,7 +16,7 @@ import pickle
 import threading
 import shutil
 import logging
-
+from rest_framework.exceptions import ValidationError
 from django.db.models import Value
 from django.db.models.functions import Concat
 from tenant_schemas.storage import TenantFileSystemStorage
@@ -177,74 +177,81 @@ class PredictorManager:
         module_name = str(p_id) + "-" + current_time.strftime("%Y%m%d%H%M%S")
         # predictorのモジュールを保存するディレクトリを作る
         location = self.create_predictor_location(module_name)
-        # 学習データを作る
-        learning_data = self.create_learning_data(p_id, start, end, data_source)
-        #learning_data.to_csv(os.path.join(location, "large_data.csv"), index=False, header=False)
-        self.write_csv(os.path.join(location, "large_data.csv"), learning_data)
+        try:
+            # 学習データを作る
+            learning_data = self.create_learning_data(p_id, start, end, data_source)
+            #learning_data.to_csv(os.path.join(location, "large_data.csv"), index=False, header=False)
+            self.write_csv(os.path.join(location, "large_data.csv"), learning_data)
 
-        ## 学習・テストデータを読み込む
-        #df = pandas.read_csv(os.path.join(location, "large_data.csv"))  # ファイル名を指定        
-        #texts = df.iloc[:, 0].tolist()
-        #labels = df.iloc[:, 1].tolist()
+            ## 学習・テストデータを読み込む
+            #df = pandas.read_csv(os.path.join(location, "large_data.csv"))  # ファイル名を指定        
+            #texts = df.iloc[:, 0].tolist()
+            #labels = df.iloc[:, 1].tolist()
 
-        rows = self.read_csv(os.path.join(location, "large_data.csv"))  # ファイル名を指定
-        texts =  [r["title"] for r in rows]
-        labels = [r["category_id"] for r in rows]
+            rows = self.read_csv(os.path.join(location, "large_data.csv"))  # ファイル名を指定
+            texts =  [r["title"] for r in rows]
+            labels = [r["category_id"] for r in rows]
 
-        # ====== 前処理 ======
-        # ラベルを数値に変換
-        le = LabelEncoder()
-        labels_encoded = le.fit_transform(labels)
-        label_classes = le.classes_      # ラベルとして含まれているカテゴリーIDのリスト
-        #target_names = labelToName(df, le.classes_) #対応するラベル名のリスト
-        target_names = labelToNameforList(rows, le.classes_) 
-        # ラベルエンコーダーを保存しておく
-        with open(os.path.join(location,'label.pickle'), 'wb') as web:
-            pickle.dump(le , web)
+            # ====== 前処理 ======
+            # ラベルを数値に変換
+            le = LabelEncoder()
+            labels_encoded = le.fit_transform(labels)
+            label_classes = le.classes_      # ラベルとして含まれているカテゴリーIDのリスト
+            #target_names = labelToName(df, le.classes_) #対応するラベル名のリスト
+            target_names = labelToNameforList(rows, le.classes_) 
+            # ラベルエンコーダーを保存しておく
+            with open(os.path.join(location,'label.pickle'), 'wb') as web:
+                pickle.dump(le , web)
 
-        #形態素解析
-        #mecab = MeCab.Tagger()
-        tokenized_texts = [tokenize(self.janome_t, t) for t in texts]
+            #形態素解析
+            #mecab = MeCab.Tagger()
+            tokenized_texts = [tokenize(self.janome_t, t) for t in texts]
 
-        # ====== TF-IDFベクトル化 ======
-        vectorizer = TfidfVectorizer(token_pattern=r"(?u)\b\w+\b")
-        X = vectorizer.fit_transform(tokenized_texts)
+            # ====== TF-IDFベクトル化 ======
+            vectorizer = TfidfVectorizer(token_pattern=r"(?u)\b\w+\b")
+            X = vectorizer.fit_transform(tokenized_texts)
 
-        #vectorizerの保存
-        with open(os.path.join(location,'vectorizer.pickle'), 'wb') as web:
-            pickle.dump(vectorizer , web)
+            #vectorizerの保存
+            with open(os.path.join(location,'vectorizer.pickle'), 'wb') as web:
+                pickle.dump(vectorizer , web)
 
-        # ====== 学習データとテストデータに分割 ======
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, labels_encoded, test_size=0.3, random_state=42, stratify=labels
-        )
+            # ====== 学習データとテストデータに分割 ======
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, labels_encoded, test_size=0.3, random_state=42, stratify=labels
+            )
 
-        # ====== 多クラスロジスティック回帰 ======
-        clf = LogisticRegression(
-            # multi_class="multinomial",
-            class_weight="balanced",    # 少数派のサンプルに対し重み付けを行う
-            solver="lbfgs",              # multinomial対応ソルバー
-            max_iter=1000
-        )
-        clf.fit(X_train, y_train)
+            # ====== 多クラスロジスティック回帰 ======
+            clf = LogisticRegression(
+                # multi_class="multinomial",
+                class_weight="balanced",    # 少数派のサンプルに対し重み付けを行う
+                solver="lbfgs",              # multinomial対応ソルバー
+                max_iter=1000
+            )
+            clf.fit(X_train, y_train)
 
-        with open(os.path.join(location,'model.pickle'), 'wb') as web:
-            pickle.dump(clf , web)
+            with open(os.path.join(location,'model.pickle'), 'wb') as web:
+                pickle.dump(clf , web)
 
-        # ====== 評価 ======
-        y_pred = clf.predict(X_test)
-        report = classification_report(y_test, y_pred, target_names = target_names)
+            # ====== 評価 ======
+            y_pred = clf.predict(X_test)
+            report = classification_report(y_test, y_pred, target_names = target_names)
 
-        # データベースに情報を登録する
-        pi = ActivityPredictor(p_id = p_id,
-                                name = module_name, 
-                                created_dtime = current_time,
-                                data_start = start,
-                                data_end = end,
-                                num_of_labels = len(label_classes), 
-                                num_of_learning_data = X_train.shape[0],
-                                score = report, using = False)
-        pi.save()
+            # データベースに情報を登録する
+            pi = ActivityPredictor(p_id = p_id,
+                                    name = module_name, 
+                                    created_dtime = current_time,
+                                    data_start = start,
+                                    data_end = end,
+                                    num_of_labels = len(label_classes), 
+                                    num_of_learning_data = X_train.shape[0],
+                                    score = report, using = False)
+            pi.save()
+        except ValueError as e:
+            self.delete_predictor_location(module_name)
+            if "least populated class" in str(e):
+                raise ValidationError({
+                    "detail": "各カテゴリーに最低2件以上の学習データが必要です。"
+                })
         return pi
     
 

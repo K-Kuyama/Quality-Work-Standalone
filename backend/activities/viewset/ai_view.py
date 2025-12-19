@@ -30,16 +30,10 @@ class CreateActivityPredictorView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         self.evaluate_params()
-        try:
-            pi = PredictorManager().create_predictor(self.p_id, start=self.start, end=self.end, data_source=self.data_source)
-            serializer = self.get_serializer(pi)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except ValueError as e:
-            if "least populated class" in str(e):
-                raise ValidationError({
-                    "detail": "各カテゴリーに最低2件以上の学習データが必要です。"
-                })
-            raise ValidationError({"detail": str(e)})
+        pi = PredictorManager().create_predictor(self.p_id, start=self.start, end=self.end, data_source=self.data_source)
+        serializer = self.get_serializer(pi)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
     def evaluate_params(self):
         params = self.request.query_params
