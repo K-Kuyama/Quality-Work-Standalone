@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useContext } from 'react';
 import AudioActivityTag from "./AudioActivityTag";
 import { getBothEnds } from "./utils"
+import { ShowPolicyContext } from '../Context';
 //import Cookies from "universal-cookie";
 import Settings from "../Settings";
 
@@ -12,12 +13,14 @@ function AudioActivityTable(props){
     const [item, setItem] = useState(props.item);
     const [font_color, setColor] = useState("rgba(255, 255, 255, 0.15)")
 
+    const ctx = useContext(ShowPolicyContext);
+
     /* propsに変更があった時に呼び出される */
     
     useEffect(() => {
         // props.idv_policy === 3以外の場合「個別設定」部分をマスク
         let elements = document.querySelectorAll(".audio_show_policy_t");
-        if (props.idv_policy === 3){
+        if (ctx.policy === 3){
             elements.forEach((e) => {
                 e.disabled = false;
                 setColor("rgba(255, 255, 255, 0.55)")
@@ -66,23 +69,6 @@ function AudioActivityTable(props){
         }
     },[props]);
 
-    /*
-    useEffect (() =>{
-        let elements = document.querySelectorAll(".audio_show_policy_t");
-        if (props.idv_policy === 3){
-            elements.forEach((e) => {
-                e.disabled = false;
-                setColor("rgba(255, 255, 255, 0.55)")
-            })}
-        else {
-            elements.forEach((e) => {
-                e.disabled = true;
-                setColor("rgba(255, 255, 255, 0.15)")
-            })
-        }
-
-    },[props]);
-*/
 
 	if (!haveData) {
 		return <div>Loading...</div>

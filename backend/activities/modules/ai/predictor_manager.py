@@ -91,14 +91,11 @@ class PredictorManager:
     def get_predictor(self, p_id):
         # すでにアクティブになっているpredictorがあるか調べる
         predictor = self.active_predictors.get(p_id)
-        
         if not predictor:
              # なければファイルからロードする
             predictor = self.load_predictor(p_id)
-            #logger.info(f"{p_id}:set predictor ->{predictor}")
              # アクティブになっているpredictorとして登録する
             self.active_predictors[p_id] = predictor
-            #logger.info(f"{p_id}:set predictor ->{predictor}")
         return predictor
     
 
@@ -125,7 +122,6 @@ class PredictorManager:
 
     def delete_predictor(self, p_id, p_name):
         ap = self.active_predictors.get(p_id)
-
         if not p_id or not p_name:
             return False
         else:
@@ -133,6 +129,8 @@ class PredictorManager:
             module_name = p.name
             p.delete()
             self.delete_predictor_location(module_name)
+            if ap != None and p_name == ap.get_name():
+                self.active_predictors[p_id] = None
             return True
 
 
