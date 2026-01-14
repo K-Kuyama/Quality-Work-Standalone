@@ -146,5 +146,13 @@
             "strokes_threshold": 10,
             "distance_threshold": 1000
         }
+    },
+    {
+        "model": "system.QwMeta",
+        "pk": 1,
+        "fields":{
+            "key":"schema_version",
+            "value": 3
+        }
     }
 ]

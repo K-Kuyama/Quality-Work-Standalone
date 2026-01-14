@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from activities.serializers.daemon_settings_serializer import AudioSettingsSerializer
 from activities.modules.client_info import ClientInfo
+from bootstrap.bootstrap import get_app_dir
 import json
 import os
 import signal
@@ -26,7 +27,8 @@ class DaemonSettingsViewSet(viewsets.GenericViewSet):
         if "file" in params:
             if params.get('file').lower() == "audio":
                 file_name = "audio_settings.json"
-        self.file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+        self.file_path = get_app_dir() / "config" / file_name
+        #self.file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
     def get_file_object(self):
         # ファイルを読み込みオブジェクトに変換する

@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import sys
+from bootstrap.bootstrap import get_app_dir
 #import environ
 
 QT_MULTI = False
@@ -20,6 +22,11 @@ QT_MULTI = False
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+DB_DIR = BASE_DIR
+if getattr(sys, "frozen", False):
+    DB_DIR = get_app_dir()
+
 #DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
 
 # セッションは更新されてから10分でタイムアウトする。
@@ -126,7 +133,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DB_DIR / 'db.sqlite3',
     }
 #    'default': {
 #         'ENGINE': 'tenant_schemas.postgresql_backend',

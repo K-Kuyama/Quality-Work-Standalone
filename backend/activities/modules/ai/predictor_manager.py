@@ -31,6 +31,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
 
+from bootstrap.bootstrap import get_app_dir
 
 logger = logging.getLogger('django')
 
@@ -77,8 +78,9 @@ class PredictorManager:
             self.predictors_dir = storage.path("predictors")
             logger.info(f"predictors dir -> {self.predictors_dir}")
         else :
-            self.predictors_dir = os.path.join(settings.MEDIA_ROOT, "predictors")
-        
+            #self.predictors_dir = os.path.join(settings.MEDIA_ROOT, "predictors")
+            self.predictors_dir = os.path.join(get_app_dir(), "predictors")
+
     def __new__(cls):
         with cls._lock:
             if cls._instance is None:

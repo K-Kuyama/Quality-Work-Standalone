@@ -148,6 +148,21 @@ exe = EXE(
     icon='QTicon_S.ico',
 )
 
+# Info.plist に含めるプライバシー説明文を定義
+# ここに記載した文章が、ユーザーへの許可ダイアログに表示される
+info_plist_content = {
+    'CFBundleIdentifier': 'jp.systemdesignk2.daemon-start',
+    'CFBundleName': 'daemon_start',
+    'CFBundlePackageType': 'APPL',
+    'CFBundleShortVersionString': '1.0.0',
+    'NSMicrophoneUsageDescription': '音声デバイスの使用状況を確認するためにマイクへのアクセス権限が必要です。',
+    'NSAppleEventsUsageDescription': 'アクティブなアプリケーション情報を取得するために、システムイベントの制御が必要です。',
+    # macOSのセキュリティ緩和（これを入れないと署名後にロードエラーになります）
+    'com.apple.security.cs.disable-library-validation': True,
+    'com.apple.security.cs.allow-jit': True,
+}
+
+
 coll = COLLECT(
     exe,
     a.binaries,
@@ -155,5 +170,14 @@ coll = COLLECT(
     strip=True,
     upx=True,
     name='quality-work',
+    # 3. ここで Info.plist を生成するように設定を追加
+    info_plist=info_plist_content,
 )
 
+# app形式にするための設定を追加
+app = BUNDLE(
+    coll, # ← exeではない
+    name='quality-work.app',
+    bundle_id='jp.systemdesignk2.quality-work',
+    info_plist=info_plist_content,
+    )

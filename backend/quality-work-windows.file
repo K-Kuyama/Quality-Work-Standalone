@@ -211,6 +211,7 @@ exe = EXE(
     entitlements_file=None,
     icon='QTicon_S.ico',
 )
+
 coll = COLLECT(
     exe,
     a.binaries,
@@ -220,3 +221,10 @@ coll = COLLECT(
     upx_exclude=[],
     name='quality-work',
 )
+
+# app形式にするための設定を追加
+app = BUNDLE(
+    coll, # ← exeではない
+    name='quality-work.app',
+    bundle_id='jp.systemdesignk2.quality-work',
+    )

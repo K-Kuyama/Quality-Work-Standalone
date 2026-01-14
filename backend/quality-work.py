@@ -6,6 +6,7 @@ import pathlib
 from awatch.aw_start import aw_start
 from awatch.audio_watcher_start import audio_watcher_start
 from qtserver import server_start
+from bootstrap.bootstrap import bootstart
 import configparser
 
 def check_file(_handler):
@@ -57,6 +58,10 @@ if os.path.exists(CONFIG_FILE):
 
 signal.signal(signal.SIGINT, handler)
 #signal.signal(signal.SIGTERM, term_handler)
+
+# データベースファイルのチェック
+# 初回はマイグレーションを行う
+bootstart()
 
 # Webサーバーのスタート
 if EV_PRODUCER_CLASS == "HttpEventProducerLocal":
