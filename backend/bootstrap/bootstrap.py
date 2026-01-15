@@ -4,26 +4,12 @@ import sqlite3
 import shutil
 from datetime import datetime
 from pathlib import Path
-#from system.DataExporter import DataExporter
+from system.utils import get_app_dir
 from .Migrator import MigratorManager
 
-CURRENT_SCHEMA_VERSION = 3
-APP_NAME = "Quality-Work"
 
-def get_app_dir():
-    """
-    定義ファイルなどを格納するユーザーApplicationフォルダの場所を返す
-    """
-    if sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / APP_NAME
-    elif sys.platform == "win32":
-        local_appdata = os.environ.get("LOCALAPPDATA")
-        if not local_appdata:
-            raise RuntimeError("LOCALAPPDATA is not set")
-        return Path(local_appdata) / APP_NAME
-    else:
-        # Linux (将来用 / 保険)
-        return Path.home() / f".{APP_NAME.lower()}"
+CURRENT_SCHEMA_VERSION = 3
+
 
 #### DB関係のファイルパス取得関数
 

@@ -31,7 +31,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
 
-from bootstrap.bootstrap import get_app_dir
+from system.utils import get_app_dir
 
 logger = logging.getLogger('django')
 

@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 import sys
-from bootstrap.bootstrap import get_app_dir
+from system.utils import get_app_dir
 #import environ
 
 QT_MULTI = False

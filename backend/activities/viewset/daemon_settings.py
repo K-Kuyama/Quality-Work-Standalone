@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from activities.serializers.daemon_settings_serializer import AudioSettingsSerializer
 from activities.modules.client_info import ClientInfo
-from bootstrap.bootstrap import get_app_dir
+from system.utils import get_app_dir
 import json
 import os
 import signal
