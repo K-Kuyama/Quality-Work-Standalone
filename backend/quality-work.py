@@ -1,4 +1,6 @@
 import os
+import sys
+import webbrowser
 import threading
 import time
 import signal
@@ -87,6 +89,8 @@ def start_running():
     aw = threading.Thread(target=aw_start, args=(stop_event_w,), daemon=True)
     aw.start()
 
+def open_browser(icon, item):
+    webbrowser.open("http://localhost:8000/dashboard")
 
 def toggle_action(icon, item):
     # メニューのボタンから呼ばれるアクション
@@ -110,24 +114,33 @@ def stop_all(icon, item):
 def run_menu():
     # --- アイコンとメニューの作成 ---
     # 16x16 or 32x32のアイコン画像（icon.png）を読み込み
-    image = Image.open("QW3.png")
+    image = Image.open("QTicon_S.ico")
+    if sys.platform == "darwin":
+        image = Image.open("QW3.png")
 
     menu = pystray.Menu(
+
         pystray.MenuItem(
             lambda item: f"ステータス: {'実行中' if is_running else '停止中'}",
             lambda icon, item: None, enabled=False
         ),
-        pystray.Menu.SEPARATOR,
+
         pystray.MenuItem(
             lambda item: "停止する" if is_running else "開始する",
             toggle_action
         ),
+        pystray.Menu.SEPARATOR,
+        pystray.MenuItem("ダッシュボードを開く", open_browser, default=True),
+        pystray.Menu.SEPARATOR,
         pystray.MenuItem("終了", stop_all)
         #pystray.MenuItem("終了", lambda icon, item: icon.stop())
     )
 
-    icon = pystray.Icon("QualityWork", image, "Quality-Work", menu)
+    icon = pystray.Icon("QualityWork", image, "Quality-Work", menu,
+                        # Windowsの左クリック用。Macでは設定しても無害（無視されるだけ）。
+                        default_action=open_browser)
 
+    '''
     # --- Mac用のテンプレート設定ハック ---
     def setup_template(icon):
         # pystrayが内部で作成したmacOS用オブジェクトにアクセス
@@ -147,7 +160,7 @@ def run_menu():
     # macOS専用のハック：テンプレートイメージとしてマークする
     # if hasattr(icon, '_icon'): # 内部的なNSImageオブジェクトが存在する場合
     #    icon._icon.setTemplate_(True)
-
+    '''
     icon.run()
 
 
