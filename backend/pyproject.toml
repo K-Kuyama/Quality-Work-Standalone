@@ -24,6 +24,7 @@ scikit-learn = "^1.7.2"
 configobj = "^5.0.9"
 pyobjc-framework-coreaudio = "^12.1"
 pyinstaller = "^6.17.0"
+pystray = "^0.19.5"
 
 
 [build-system]
