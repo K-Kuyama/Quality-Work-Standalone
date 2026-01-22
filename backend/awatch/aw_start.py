@@ -126,7 +126,7 @@ class BlankPeriod:
 
 
 
-def aw_start(stand_alone = False):
+def aw_start(stop_flag, stand_alone = False):
     '''
     メインプログラム。ウインドウ情報を取得し、前回のループで取得したものと比較。
     '''
@@ -250,7 +250,7 @@ def aw_start(stand_alone = False):
     #signal.signal(signal.SIGINT, handler)
 
     window = None
-    while True:
+    while not stop_flag.is_set(): #stop_flagイベントがセットされるとループから抜ける
         #        print(counter)
         try:
             window = get_window_info()
@@ -337,6 +337,8 @@ def aw_start(stand_alone = False):
             counter = 0
             ar.reset()
 
+    # 終了処理
+    stop_flag.clear()  #イベントにセットされている値をクリアする
 
                     
 #            print(f"{start_time}:{duration.seconds}:{event_data}")
