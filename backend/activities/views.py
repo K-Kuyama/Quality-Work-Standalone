@@ -3,6 +3,7 @@
 # Create your views here.
 #import django_filters
 import math
+import logging
 from django.db.models import Sum, F, Value, IntegerField
 from django.db.models.functions import Trunc
 from datetime import datetime, timezone, timedelta
@@ -20,6 +21,8 @@ from .serializer import ActivitySerializer, ByHourSerializer, SystemSettingsSeri
 #from .serializer import ActivitySerializer
 
 from django.conf import settings
+
+logger = logging.getLogger(f"django.{__name__}")
 
 class SystemSettingsViewSet(viewsets.ModelViewSet):
     queryset = SystemSettings.objects.all()
@@ -80,9 +83,9 @@ class PaginatedEventView(generics.ListAPIView):
     
     def get_queryset(self):
         st_str = self.request.query_params.get("start")
-        print(st_str)
+        logger.debug(st_str)
         end_str = self.request.query_params.get("end")
-        print(end_str)
+        logger.debug(end_str)
         return Activity.objects.filter(start_time__gte=datetime.strptime(st_str, self.format_str),
                                        start_time__lte=datetime.strptime(end_str, self.format_str)).exclude(title="blank")   
 
@@ -144,7 +147,7 @@ class TotalEventTimeByHour(generics.ListAPIView):
             
         # 正時またがりの補正をかける
         for d in sub_query_set:
-            print(d.roundedTime, d.start_time)
+            logger.debug(f"{d.roundedTime}, {d.start_time}")
             #roundedTimeは文字列型なので変換が必要
             td = datetime.strptime(d.roundedTime+"+0000",'%Y-%m-%d %H:%M:%S%z') - d.start_time
 #            td = d['roundTime'] - d['start_time']
@@ -165,7 +168,7 @@ class TotalEventTimeByHour(generics.ListAPIView):
     
         hl = self.createHourlyData(queryset,sub_queryset)
         for h in hl:
-            print(f"{h['hour']} : {h['duration']}")
+            logger.debug(f"{h['hour']} : {h['duration']}")
 
         serializer = self.get_serializer(hl, many=True)
         return Response(serializer.data)
@@ -215,9 +218,9 @@ class MergedEventView(generics.ListAPIView):
     
     def get_queryset(self):
         st_str = self.request.query_params.get("start")
-        print(st_str)
+        logger.debug(st_str)
         end_str = self.request.query_params.get("end")
-        print(end_str)
+        logger.debug(end_str)
         return Activity.objects.filter(start_time__gte=datetime.strptime(st_str, self.format_str),
                                        start_time__lte=datetime.strptime(end_str, self.format_str)).exclude(title="blank")
     
@@ -257,7 +260,7 @@ class MergedEventView(generics.ListAPIView):
 
 
     def sort_activity(self, queryset):
-        print(queryset)
+        logger.debug(queryset)
         if self.duration_sort:
 #            return sorted(queryset, key=lambda x:x['duration'], reverse=True)
             return sorted(queryset, key=attrgetter('duration'), reverse=True)

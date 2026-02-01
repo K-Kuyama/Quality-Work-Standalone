@@ -1,5 +1,8 @@
+import logging
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+
+logger = logging.getLogger(f"django.{__name__}")
 
 # Create your models here.
 class Activity(models.Model):
@@ -40,8 +43,8 @@ class CategorizedKeyWord(models.Model):
 # データアップロード用の管理テーブル
 
 def set_upload_to(instance, filename):
-    print(f"user_id:{str(instance.user_id)}")
-    print(f"filename:{filename}")
+    logger.debug(f"user_id:{str(instance.user_id)}")
+    logger.debug(f"filename:{filename}")
     return "sc{0}/{1}".format(str(instance.user_id), filename)
 
 class FileUpdateHistory(models.Model):

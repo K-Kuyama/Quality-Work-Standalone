@@ -33,7 +33,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from system.utils import get_app_dir
 
-logger = logging.getLogger('django')
+logger = logging.getLogger(f"django.{__name__}")
 
 # SQLiteへの接続
 def conn_to_db(db_name):
@@ -43,8 +43,8 @@ def conn_to_db(db_name):
         conn = sqlite3.connect(db_name)
         return conn
     except Exception as e:
-        print('Error: データベースに接続できませんでした')
-        print(e)
+        logger.error('Error: データベースに接続できませんでした')
+        logger.error(e)
         return None
 
 
@@ -359,63 +359,3 @@ class PredictorManager:
         #return df
         return rows
             
-#以下はSQL文を直に発行してデータを取り出すV3.0で使っていたコードだが、postgreSQLにも対応するために
-# ORMを使うように変更したので、今後は使わない。
-'''
-    def create_learning_data(self, p_id, start=None, end=None, data_source="Activity"):
-        # CategorizedActivityとして登録されている項目とマッチするアクティビティを取り出し、
-        # [アプリ名+タイトル, category-id, category名]からなる行のリストを作る
-        # data_source が'Activity'の時は通常のCategorizedActivityテーブルを使い、'ActivityEval'の場合は
-        # ategorizedActivityEvalテーブルを使う (このスイッチは今は使われていないが残してある)
-
-        conn = conn_to_db(self.db_file)
-        
-        sql_str = "SELECT app||' '||title AS atitle, category_id, name FROM  activities_categorizedactivity INNER JOIN activities_category ON activities_categorizedactivity.category_id = activities_category.id WHERE perspective_id = ?"
-        if data_source == "ActivityEval":
-            sql_str = "SELECT app||' '||title AS atitle, category_id, name FROM  activities_categorizedactivityeval INNER JOIN activities_category ON activities_categorizedactivityeval.category_id = activities_category.id WHERE perspective_id = ?"
-        #categorize_df = pandas.read_sql_query(sql_str, conn, params=(p_id,))
-        categorize_rows = self.read_sql_query(sql_str, conn, params=(p_id,))
-
-        if data_source == "CategorizedActivity":
-            return categorize_rows
-        
-        else:
-            sql_str2 = "SELECT app||' '||title AS atitle FROM activities_activity"
-            #activity_df = None
-            activity_rows = None
-            if start == None:
-                if end == None:
-                    #activity_df = pandas.read_sql_query(sql_str2, conn)
-                    activity_rows = self.read_sql_query(sql_str2, conn)
-                else:
-                    condition_str = " WHERE datetime(start_time, 'localtime') < datetime(?, 'localtime')"
-                    #activity_df = pandas.read_sql_query(sql_str2+condition_str, conn, params=(end,))
-                    activity_rows = self.read_sql_query(sql_str2+condition_str, conn, params=(end,))
-            else:
-                if end == None:
-                    condition_str = " WHERE datetime(start_time, 'localtime') >= datetime(?, 'localtime')"
-                    #activity_df = pandas.read_sql_query(sql_str2+condition_str, conn, params=(start,))
-                    activity_rows = self.read_sql_query(sql_str2+condition_str, conn, params=(start,))
-                else:
-                    condition_str = " WHERE (datetime(start_time, 'localtime') BETWEEN datetime(?, 'localtime') AND datetime(?, 'localtime'))"
-                    #activity_df = pandas.read_sql_query(sql_str2+condition_str, conn, params=(start, end))
-                    activity_rows = self.read_sql_query(sql_str2+condition_str, conn, params=(start, end))
-
-            #df = pandas.DataFrame()
-            #i=0
-            #for index, row in activity_df.iterrows():
-            #    matched = categorize_df[categorize_df['atitle']==row['atitle']]
-            #    if not matched.empty:
-            #        new_rows = pandas.DataFrame({'title': row['atitle'], 'category_id': matched.iloc[0]['category_id'], 
-            #                                'name': matched.iloc[0]['name']}, index=[i])
-            #        df = pandas.concat([df, new_rows])
-            #        i += 1
-            rows = []
-            for row in activity_rows:
-                matched = next((r for r in categorize_rows if r['atitle']==row['atitle']), None)
-                if matched:
-                    rows.append({'title': row['atitle'], 'category_id': matched['category_id'], 
-                                            'name': matched['name']})
-            #return df
-            return rows
-'''

@@ -213,3 +213,55 @@ LOGIN_REDIRECT_URL = ''    # 追加
 #LOGOUT_REDIRECT_URL ='/qt/account/loginHome'
 #DEBUG = True
 
+#ログの設定
+
+def get_log_file():
+    if getattr(sys, 'frozen', False):
+        # PyInstallerで実行されている場合
+        if sys.platform == "darwin":
+            log_dir = Path.home() / "Library/Application Support/Quality-Work/logs"
+        elif sys.platform == "win32":
+            log_dir = Path(os.getenv("APPDATA")) / "Quality-Work/logs"
+    else:
+        # 通常のスクリプト実行の場合
+        base_dir = Path(__file__).parent.parent
+        log_dir = base_dir / "logs"
+
+    # フォルダが存在しない場合は作成
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir / "server.log"
+
+LOG_FILE = get_log_file()
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    # ログ出力フォーマットの設定
+    'formatters': {
+        'production': {
+            'format': '%(asctime)s - %(name)s:%(lineno)d - %(levelname)s - %(message)s'
+        },
+    },
+    # ハンドラの設定
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': LOG_FILE,
+            'formatter': 'production',
+            'when': 'midnight',
+            'interval': 1,
+            'backupCount': 7,
+        },
+    },
+    # ロガーの設定
+    'loggers': {
+        # Django自身が出力するログ全般を拾うロガー
+        'django': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+
+    },
+}

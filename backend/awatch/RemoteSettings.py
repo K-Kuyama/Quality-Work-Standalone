@@ -3,20 +3,14 @@ Created on 2025/05/25
 
 @author: kuyamakazuhiro
 '''
-import abc
-import os
 
-import csv
-from datetime import timedelta, datetime, date
-from dateutil.relativedelta import relativedelta
-from zoneinfo import ZoneInfo
+import os
+import logging
 import requests
-from http import HTTPStatus
-from http.client import RemoteDisconnected
-from urllib3.exceptions import ProtocolError
 
 from .HttpSession import HttpSession
 
+logger = logging.getLogger(f"QualityWork.{__name__}")
 
 # Webサーバーと通信を行い設定情報を取得するためのクラス
 class RemoteSettings(HttpSession):
@@ -33,9 +27,10 @@ class RemoteSettings(HttpSession):
         try:
             response = self.session.get(config_target, params={'file':kind, 'process_id':pid})
             data = response.json()
-        except requests.exceptions.ConnectionError:
-                print("ConnectinError")
+        except requests.exceptions.ConnectionError as e:
+                logger.error("ConnectinError")
+                logger.error(e)
         except requests.exceptions.HTTPError as e:
-            print("HttpError")
-            print(e)
+            logger.error("HttpError")
+            logger.error(e)
         return data

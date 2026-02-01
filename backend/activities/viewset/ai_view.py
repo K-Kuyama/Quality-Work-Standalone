@@ -1,3 +1,4 @@
+import logging
 from rest_framework import viewsets, generics
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
@@ -8,6 +9,7 @@ from activities.models import ActivityPredictor
 from activities.serializer import ActivityPredictorSerializer
 from activities.modules.ai.predictor_manager import PredictorManager
 
+logger = logging.getLogger(f"django.{__name__}")
 
 # Predictorリストの取得
 class ActivityPredictorsView(generics.ListAPIView):
@@ -37,7 +39,7 @@ class CreateActivityPredictorView(generics.CreateAPIView):
 
     def evaluate_params(self):
         params = self.request.query_params
-        print(params)
+        logger.debug(params)
         if 'start' in params:
             self.start = params.get('start')
         if 'end' in params:
@@ -58,9 +60,9 @@ class DestroyActivityPredictorView(generics.DestroyAPIView):
             self.p_id = int(params.get('p_id'))
 
         instance = self.get_object()
-        print(instance)
-        print(instance.p_id)
-        print(instance.name)
+        logger.debug(instance)
+        logger.debug(instance.p_id)
+        logger.debug(instance.name)
         result = PredictorManager().delete_predictor(self.p_id, instance.name)
         if result:
             self.perform_destroy(instance)

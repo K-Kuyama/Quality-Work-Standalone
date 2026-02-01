@@ -12,6 +12,7 @@ from django.db import IntegrityError, transaction
 import re
 import os
 import csv
+import logging
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -22,6 +23,8 @@ from activities.serializers.file_update_history_serializer import FileUpdateHist
 
 from django.conf import settings
 from activities.decolators import attach_decorator
+
+logger = logging.getLogger(f"django.{__name__}")
 
 DATETIME_FORMAT ="%Y-%m-%d %H:%M:%S.%f%z"
 
@@ -69,7 +72,7 @@ class FileUploadView(generics.ListCreateAPIView):
             try:
                 activity.save()
             except IntegrityError:
-                print(f" Data import error :{activity}")
+                logger.error(f" Data import error :{activity}")
                 skips += 1
         #print(f"Data import success : skip {skips}")
         fh = FileUpdateHistory.objects.get(id=serializer.instance.id)
@@ -77,9 +80,9 @@ class FileUploadView(generics.ListCreateAPIView):
         fh.save()
         
         # 処理が終わったらファイルを削除する
-        print(f"delete file {f_name}")
+        logger.info(f"delete file {f_name}")
         if os.path.exists(f_name):
-            print(f"removing {f_name}")
+            logger.info(f"removing {f_name}")
             os.remove(f_name)
 
         headers = self.get_success_headers(serializer.data)

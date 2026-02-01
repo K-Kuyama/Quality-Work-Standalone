@@ -2,6 +2,29 @@ from pathlib import Path
 from configobj import ConfigObj
 from io import StringIO
 import sys
+import os
+import logging
+
+logger = logging.getLogger(f"QualityWork.{__name__}")
+
+
+APP_NAME = "Quality-Work"
+
+def get_app_dir():
+    """
+    定義ファイルなどを格納するユーザーApplicationフォルダの場所を返す
+    """
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / APP_NAME
+    elif sys.platform == "win32":
+        local_appdata = os.environ.get("LOCALAPPDATA")
+        if not local_appdata:
+            raise RuntimeError("LOCALAPPDATA is not set")
+        return Path(local_appdata) / APP_NAME
+    else:
+        # Linux (将来用 / 保険)
+        return Path.home() / f".{APP_NAME.lower()}"
+    
 
 class ConfigManager:
     # 設定ファイル管理クラス
@@ -119,10 +142,12 @@ RETRY_INTERVAL = 50
 
     def __init__(self):
         # ホームディレクトリ下の .qw ディレクトリ
-        CONFIG_DIR = '.qw'
+        #CONFIG_DIR = '.qw'
+        CONFIG_DIR = 'config'
         CONFIG_FILE = 'config.ini'
 
-        self.config_dir = Path.home() / CONFIG_DIR
+        #self.config_dir = Path.home() / CONFIG_DIR
+        self.config_dir = get_app_dir() / CONFIG_DIR
         self.config_dir.mkdir(exist_ok=True)
         self.config_file = self.config_dir / CONFIG_FILE
 
@@ -139,7 +164,6 @@ RETRY_INTERVAL = 50
             # 初回作成：テンプレート（コメント含む）をそのまま保存
             with open(self.config_file, "w", encoding="utf-8") as f:
                 f.write(self.DEFAULT_CONFIG)
-
         self.config = ConfigObj(str(self.config_file), encoding="utf-8")
 
         # デフォルト値とのマージ

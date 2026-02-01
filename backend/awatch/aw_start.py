@@ -5,18 +5,11 @@ Created on 2024/05/01
 '''
 
 import sys
-
-
-#sys.path.append("/Applications/Eclipse_2021-03.app/Contents/ActiveWatch/ActiveWatchModification/aw-watcher-window")
-#sys.path.append("/Users/kuyamakazuhiro/sources/ActiveWatch/ActiveWatchModification/aw-watcher-window")
-#sys.path.append("/Users/kuyamakazuhiro/sources/ActiveWatch/ActiveWatchModification/aw-client")
 import os
-import signal
 import time
-import csv
-import re
+import logging
 from pynput import keyboard, mouse
-from datetime import timedelta, datetime, timezone
+from datetime import datetime
 from zoneinfo import ZoneInfo
 from .WindowInfo import get_window_info
 
@@ -27,6 +20,7 @@ import configparser
 from awatch.EventProducer import FileEventProducer, HttpEventProducer
 from awatch.ConfigManager import ConfigManager
 
+logger = logging.getLogger(f"QualityWork.{__name__}")
 
 class ActionRecorder:
     '''
@@ -130,7 +124,7 @@ def aw_start(stop_flag, stand_alone = False):
     '''
     メインプログラム。ウインドウ情報を取得し、前回のループで取得したものと比較。
     '''
-    print("start application.")
+    logger.info("start application.")
 
     '''
     デフォルト値の設定。設定ファイルに定義がない場合、これが使われる。
@@ -151,12 +145,6 @@ def aw_start(stop_flag, stand_alone = False):
     '''
     設定ファイルからの読み込み処理
     '''
-#    if not os.path.exists(CONFIG_FILE):
-#        poll_time = 1
-#    else:
-
-    #config_ini = configparser.ConfigParser()
-    #config_ini.read(CONFIG_FILE, encoding='utf-8')
 
     if stand_alone:
         config_ini = ConfigManager()
@@ -168,15 +156,15 @@ def aw_start(stop_flag, stand_alone = False):
         try:
             TIME_ZONE = config_ini.get('DEFAULT','Time_zone')
         except (configparser.NoSectionError,configparser.NoOptionError):
-            print("Time_zone not defined")     
+            logger.warning("Time_zone not defined")     
         try:
             EV_PRODUCER_CLASS = config_ini.get('DEFAULT','Ev_producer_class')
         except (configparser.NoSectionError,configparser.NoOptionError):
-            print("EventProducer not defined")           
+            logger.warning("EventProducer not defined")           
         try:
             POST_URL = config_ini.get('DEFAULT','Post_url')
         except (configparser.NoSectionError,configparser.NoOptionError):
-            print("Post_url not defined")
+            logger.warning("Post_url not defined")
         #try:
         #    POST_BULK_URL = config_ini.get('DEFAULT','Post_bulk_url')
         #except (configparser.NoSectionError,configparser.NoOptionError):
@@ -184,21 +172,21 @@ def aw_start(stop_flag, stand_alone = False):
         try:
             USER_NAME = config_ini.get('DEFAULT','User_name')
         except (configparser.NoSectionError,configparser.NoOptionError):
-            print("User_name not defined")
+            logger.warning("User_name not defined")
         try:
             PASSWORD = config_ini.get('DEFAULT','Password')
         except (configparser.NoSectionError,configparser.NoOptionError):
-            print("Password not defined")
+            logger.warning("Password not defined")
         try:
             DATA_FILE_PATH = config_ini.get('DEFAULT','Data_file_path')
             if DATA_FILE_PATH.startswith("./"):
                 DATA_FILE_PATH = os.path.join(str(config_ini.config_dir), DATA_FILE_PATH.replace("./", ""))
         except (configparser.NoSectionError,configparser.NoOptionError):
-            print("Data_file_path not defined")
+            logger.warning("Data_file_path not defined")
         try:
             ENCODING= config_ini.get('DEFAULT','Encoding')
         except (configparser.NoSectionError,configparser.NoOptionError):
-            print("Encoding not defined")
+            logger.warning("Encoding not defined")
         try:
             tstr = config_ini.get('DEFAULT','File_rotate')
             if tstr == "None":
@@ -206,16 +194,15 @@ def aw_start(stop_flag, stand_alone = False):
             else:
                 FILE_ROTATE = config_ini.get('DEFAULT','File_rotate')
         except (configparser.NoSectionError,configparser.NoOptionError):
-            print("File_rotate_pediod not defined")
+            logger.warning("File_rotate_pediod not defined")
  
-    print(f"poll_time= {poll_time}")     
-    print(f"TIME_ZONE= {TIME_ZONE}")
-    print(f"EV_PRODUCER_CLASS= {EV_PRODUCER_CLASS}")
-    print(f"POST_URL= {POST_URL}")
-    #print(f"POST_BULK_URL= {POST_BULK_URL}")
-    print(f"DATA_FILE_PATH= {DATA_FILE_PATH}")
-    print(f"ENCODING= {ENCODING}")
-    print(f"FILE_ROTATE= {FILE_ROTATE}")
+    logger.info(f"poll_time= {poll_time}")     
+    logger.info(f"TIME_ZONE= {TIME_ZONE}")
+    logger.info(f"EV_PRODUCER_CLASS= {EV_PRODUCER_CLASS}")
+    logger.info(f"POST_URL= {POST_URL}")
+    logger.info(f"DATA_FILE_PATH= {DATA_FILE_PATH}")
+    logger.info(f"ENCODING= {ENCODING}")
+    logger.info(f"FILE_ROTATE= {FILE_ROTATE}")
 
 
  
@@ -256,7 +243,7 @@ def aw_start(stop_flag, stand_alone = False):
             window = get_window_info()
             #window = get_current_window("applescript")
         except Exception as e:
-            print(e)
+            logger.warning(e)
             pass
         if not last_window :
             last_window = window

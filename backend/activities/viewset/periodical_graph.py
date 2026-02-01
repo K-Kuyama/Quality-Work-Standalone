@@ -3,6 +3,7 @@
 # Create your views here.
 #import django_filters
 import calendar
+import logging
 from datetime import date
 from django.db.models import Sum
 from django.db.models.functions import Trunc
@@ -29,6 +30,7 @@ from django.conf import settings
 
 #USE_POSTGRESQL = True
 
+logger = logging.getLogger(f"django.{__name__}")
 
 # 指定された日の、時間ごとの合計作業時間を出力する
 class TotalEventTimeForPeriodicalGraph(MergedEventView, CreateIndexMixin):
@@ -265,7 +267,7 @@ class TotalEventTimeForPeriodicalGraph(MergedEventView, CreateIndexMixin):
                 index = int(d.dt_index)-1
             else:
                 index = int(d.dt_index)
-            print(f"index {index}, befor {before}, after {after}")
+            logger.debug(f"index {index}, befor {before}, after {after}")
             if index >0:
                 hourly_data[index-1]['value'] -= after
             if index<n_of_index:

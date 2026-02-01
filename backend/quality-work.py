@@ -4,7 +4,8 @@ import webbrowser
 import threading
 import time
 import signal
-import pathlib
+from pathlib import Path
+import logging
 import pystray
 from PIL import Image
 
@@ -25,7 +26,7 @@ def check_file(_handler):
     #print(f"currend directory : {cdir}")
     target_file = os.path.join(cdir, CONFIG_FILE_PATH) 
     print(f"------start checking the file: {target_file} -------")
-    p = pathlib.Path(target_file)
+    p = Path(target_file)
     st = p.stat()
     time_stamp = st.st_mtime
     while True:
@@ -35,6 +36,10 @@ def check_file(_handler):
         if time_stamp != current_time_stamp:
             time_stamp = current_time_stamp
             _handler()
+
+'''
+シグナルハンドラー
+'''
 
 def handler(signum, frame):
     print("Quit programs.")
@@ -53,6 +58,53 @@ def term_handler():
     auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), daemon=True)
     auw.start()
     
+'''
+ログ出力設定機能
+'''
+def setup_logger():
+    # 1. 出力先ディレクトリの決定
+    if getattr(sys, 'frozen', False):
+        # PyInstallerで実行されている場合
+        if sys.platform == "darwin":
+            log_dir = Path.home() / "Library/Application Support/Quality-Work/logs"
+        elif sys.platform == "win32":
+            log_dir = Path(os.getenv("APPDATA")) / "Quality-Work/logs"
+    else:
+        # 通常のスクリプト実行の場合
+        base_dir = Path(__file__).parent
+        log_dir = base_dir / "logs"
+
+    # 2. フォルダが存在しない場合は作成
+    log_dir.mkdir(parents=True, exist_ok=True)
+    
+    log_file_path = log_dir / "daemon.log"
+
+    # 3. ロガーの設定
+    logger = logging.getLogger("QualityWork")
+    logger.setLevel(logging.DEBUG)
+
+    # 4. ハンドラーの作成（ファイル出力）
+    #file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
+    # 毎日(midnight)に切り替え、7日分保存する
+    file_handler = logging.handlers.TimedRotatingFileHandler(
+        log_file_path,
+        when="midnight",
+        interval=1,
+        backupCount=7,
+        encoding='utf-8')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+
+    # 5. ロガーにハンドラーを追加
+    if not logger.handlers:
+        logger.addHandler(file_handler)
+        
+        # コンソールにも出力したい場合は以下の2行を追加
+        # console_handler = logging.StreamHandler()
+        # logger.addHandler(console_handler)
+
+    return logger
+
 
 '''
 システムトレイメニューからの操作関連機能
@@ -111,12 +163,32 @@ def stop_all(icon, item):
 
 
 
+def get_icon_file():
+    
+    # PyInstallerで同梱されたリソースの実体パスを返す
+    if getattr(sys, "frozen", False):
+        # PyInstaller 実行時
+        base_path = Path(sys._MEIPASS)
+    else:
+        # その他
+        #base_path = Path(__file__).resolve().parent.parent
+        base_path = Path(__file__).parent
+    if sys.platform == "darwin":
+        file_name = "QW3.png"
+    else:
+        file_name = "QTicon_S.ico"
+    return base_path / file_name
+
+
 def run_menu():
     # --- アイコンとメニューの作成 ---
     # 16x16 or 32x32のアイコン画像（icon.png）を読み込み
-    image = Image.open("QTicon_S.ico")
-    if sys.platform == "darwin":
-        image = Image.open("QW3.png")
+    
+    
+    #image = Image.open("QTicon_S.ico")
+    #if sys.platform == "darwin":
+    #    image = Image.open("QW3.png")
+    image = Image.open(get_icon_file())
 
     menu = pystray.Menu(
 
@@ -140,27 +212,6 @@ def run_menu():
                         # Windowsの左クリック用。Macでは設定しても無害（無視されるだけ）。
                         default_action=open_browser)
 
-    '''
-    # --- Mac用のテンプレート設定ハック ---
-    def setup_template(icon):
-        # pystrayが内部で作成したmacOS用オブジェクトにアクセス
-        # icon._main_thread_notifier はMac版pystrayの内部構造
-        try:
-            # アイコンが実際にメニューバーに表示されるまでわずかに待機
-            import time
-            time.sleep(0.5)
-            # pystray内部のNSImageを取得してテンプレート設定
-            icon._icon.setTemplate_(True)
-        except Exception as e:
-            print(f"Template setup failed: {e}")
-
-    # 別スレッドで設定を実行（icon.runがブロックするため）
-    threading.Thread(target=setup_template, args=(icon,), daemon=True).start()
-
-    # macOS専用のハック：テンプレートイメージとしてマークする
-    # if hasattr(icon, '_icon'): # 内部的なNSImageオブジェクトが存在する場合
-    #    icon._icon.setTemplate_(True)
-    '''
     icon.run()
 
 
@@ -171,14 +222,18 @@ def run_menu():
 
 CONFIG_FILE = 'config.ini'
 EV_PRODUCER_CLASS = "HttpEventProducerLocal"
-print("------start-----")
+
+#ロガーを取得する
+logger = setup_logger()
+
+logger.info("------Quality-Work start-----")
 if os.path.exists(CONFIG_FILE):
     config_ini = configparser.ConfigParser()
     config_ini.read(CONFIG_FILE, encoding='utf-8')
     try:
         EV_PRODUCER_CLASS = config_ini.get('DEFAULT','Ev_producer_class')
     except (configparser.NoSectionError,configparser.NoOptionError):
-        print("EventProducer not defined")          
+        logger.warning("EventProducer not defined")          
 
 
 # ローカルで動くdjangoアプリケーションが設定ファイルを変更した際に
@@ -192,33 +247,29 @@ bootstart()
 
 # Webサーバーのスタート
 if EV_PRODUCER_CLASS == "HttpEventProducerLocal":
-    #os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)),"backend"))
     qts = threading.Thread(target=server_start, daemon=True)
     qts.start()
     
-# ファイルチェック
+# ファイルチェック用デーモンのスタート
 fc = threading.Thread(target=check_file, args=(term_handler,), daemon=True)
 fc.start()
 
+#　Web Serverが立ち上がるのを待つため、5秒スリープ
 time.sleep(5)
-#オーディオデーモンのスタート
+
+# オーディオデーモンのスタート
 # スレッドにイベントオブジェクトを設定する
-print("------Audio watcher start-----")
+logger.info("------Audio watcher start-----")
 stop_event_au = threading.Event()
 auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), daemon=True)
 auw.start()
 
 #ウインドウイベントデーモンのスタート
-print("------Active window watcher start-----")
+logger.info("------Active window watcher start-----")
 stop_event_w = threading.Event()
 aw = threading.Thread(target=aw_start, args=(stop_event_w,), daemon=True)
 aw.start()
 
-
-#QwMenu("Quality Work", icon="QWicon_template.png").run()
+# トレイメニューの表示
 run_menu()
 
-#time.sleep(2)
-    
-#while True:
-#	time.sleep(1)

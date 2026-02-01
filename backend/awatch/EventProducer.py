@@ -5,6 +5,7 @@ Created on 2024/09/07
 '''
 import abc
 import os
+import logging
 
 import csv
 from datetime import timedelta, datetime, date
@@ -14,6 +15,8 @@ import requests
 from http import HTTPStatus
 from http.client import RemoteDisconnected
 from urllib3.exceptions import ProtocolError
+
+logger = logging.getLogger(f"QualityWork.{__name__}")
 
 class EventProducer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -43,7 +46,6 @@ class HttpEventProducer(EventProducer):
         self.hasSession = False
         if self.multi:
             r = self.getSession()
-            #print(f"initialize result {r}")
         else:
             self.session = requests.Session()
 
@@ -54,8 +56,8 @@ class HttpEventProducer(EventProducer):
         try:
             response = requests.get(self.post_url+"account/csrf/")
         except requests.exceptions.ConnectionError as e:
-            print("*ConnectionError*")
-            print(e)
+            logger.error("*ConnectionError*")
+            logger.error(e)
             return False
         #response = requests.get(self.post_url+"csrf/")
         self.csrf_cookie = response.cookies.get('csrftoken')
@@ -69,12 +71,9 @@ class HttpEventProducer(EventProducer):
         try:
             response = self.session.post(self.post_url+"account/api-login/", headers=headers, cookies=cookies, json=request_body)
         except requests.exceptions.ConnectionError as e:
-            print("*ConnectionError*")
-            print(e)
+            logger.error("*ConnectionError*")
+            logger.error(e)
             return False
-        #response = self.session.post(self.post_url+"api-login/", headers=headers, cookies=cookies, json=request_body)
-        #print(response.text)
-        #print(response)
         self.csrf_cookie = response.cookies.get('csrftoken')
         self.hasSession = True
         return True
@@ -95,7 +94,6 @@ class HttpEventProducer(EventProducer):
             if end_time >= start_time:
                 duration = end_time - start_time
             else :
-                #print(f"timedelta 0")
                 duration = timedelta()
         else :
             duration = datetime.now(ZoneInfo(self.time_zone)) - start_time
@@ -118,7 +116,7 @@ class HttpEventProducer(EventProducer):
             'app':event_data['window']['app'],
             'title':title_str,
             }
-        print(f"request:{request_body}")
+        logger.debug(f"request:{request_body}")
         self.sendEvent(request_body, "api/Activity/")
 
 
@@ -146,7 +144,7 @@ class HttpEventProducer(EventProducer):
             'another_app': None,
             'another_title': None
         }
-        print(request_body)
+        logger.debug(request_body)
         self.sendEvent(request_body, "api/AudioActivity/CreateActivity/")
 
 
@@ -163,7 +161,6 @@ class HttpEventProducer(EventProducer):
                 if (self.getSession() != True):
                     self.request_pool.append(request_body)
                     return None
-            #cookies = {"csrftoken": self.csrf_cookie}
             headers = {"X-CSRFToken": self.csrf_cookie, "Referer":self.post_url,}
         else:
             headers ={}
@@ -171,8 +168,8 @@ class HttpEventProducer(EventProducer):
             if not request_body == None: # flushEvents()から呼ばれている場合
                 self.request_pool.append(request_body)
             try:
-                print(self.post_url+local_path+"bulk/")
-                print(self.request_pool)
+                logger.info(self.post_url+local_path+"bulk/")
+                logger.info(self.request_pool)
                 response = self.session.post(self.post_url+local_path+"bulk/",
                                             headers=headers, json=self.request_pool, allow_redirects=False)
                 response.raise_for_status()
@@ -180,13 +177,13 @@ class HttpEventProducer(EventProducer):
                    if self.multi:
                         self.getSession()
                 else:
-                    print(f"{response} : {self.request_pool}")
+                    logger.info(f"{response} : {self.request_pool}")
                     self.request_pool =[]
             except requests.exceptions.ConnectionError:
-                print("ConnectinError")
+                logger.error("ConnectinError")
             except requests.exceptions.HTTPError as e:
-                print("HttpError")
-                print(e)
+                logger.error("HttpError")
+                logger.error(e)
                 if(e.response.status_code == HTTPStatus.FORBIDDEN):
                     if self.multi:
                         self.getSession()
@@ -203,23 +200,22 @@ class HttpEventProducer(EventProducer):
                 self.hasSession = False
                 self.request_pool.append(request_body)
             except requests.exceptions.HTTPError as e:
-                print(f"HttpError {e}")
+                logger.error(f"HttpError {e}")
                 if(e.response.status_code == HTTPStatus.FORBIDDEN):
                     self.hasSession = False
                 if(e.response.status_code == HTTPStatus.BAD_REQUEST):
-                    print('* BAD REQUEST *')
-                    print(e.response.text)
-                    #print('******')
+                    logger.error('* BAD REQUEST *')
+                    logger.error(e.response.text)
                 else:
                     self.request_pool.append(request_body)
             except RemoteDisconnected as e:
-                print("* Remote Connectin Error *")
-                print(e)
+                logger.warning("* Remote Connectin Error *")
+                logger.warning(e)
                 self.hasSession = False
                 self.request_pool.append(request_body)
             except ProtocolError as e:
-                print("* Protocol Error *")
-                print(e)
+                logger.error("* Protocol Error *")
+                logger.error(e)
                 self.hasSession = False
                 self.request_pool.append(request_body)
 
@@ -227,12 +223,7 @@ class HttpEventProducer(EventProducer):
     def createBlankEvent(self, bp):
         #ウインドウへのアクセスがなかったことを示すイベントを送信
         start_time = bp.start_time
-#        duration = datetime.now(timezone.utc) - start_time
         duration = datetime.now(ZoneInfo("Asia/Tokyo")) - start_time
-#        print(f"BP end at {datetime.now(timezone.utc)}")
-#        print("createBlankEvent")
-#        self.writer.writerow([start_time, duration.seconds,0,0,0,0,0,'blank', 'blank'])
-#        self.f.flush()
         request_body = {
             'start_time':start_time.strftime("%Y-%m-%d %H:%M:%S.%f%z"),
             'duration':duration.seconds,
@@ -243,10 +234,9 @@ class HttpEventProducer(EventProducer):
             'app':'blank',
             'title':'blank',
             }
-        print(f"request:{request_body}")
+        logger.debug(f"request:{request_body}")
         response = self.sendEvent(request_body, "api/Activity/")
-#        response = requests.post(POST_URL, json=request_body)
-        print(response)
+
 
 
 

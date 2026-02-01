@@ -8,6 +8,9 @@ RemoteSettings.pyから利用
 '''
 
 import requests
+import logging
+
+logger = logging.getLogger(f"QualityWork.{__name__}")
 
 class HttpSession:
     def __init__(self, post_url, user_name, password, multi):
@@ -19,7 +22,6 @@ class HttpSession:
         self.hasSession = False
         if self.multi:
             r = self.getSession()
-            #print(f"initialize result {r}")
         else:
             self.session = requests.Session()
 
@@ -30,8 +32,8 @@ class HttpSession:
         try:
             response = requests.get(self.post_url+"account/csrf/")
         except requests.exceptions.ConnectionError as e:
-            print("*ConnectionError*")
-            print(e)
+            logger.error("*ConnectionError*")
+            logger.error(e)
             return False
         #response = requests.get(self.post_url+"csrf/")
         self.csrf_cookie = response.cookies.get('csrftoken')
@@ -45,8 +47,8 @@ class HttpSession:
         try:
             response = self.session.post(self.post_url+"account/api-login/", headers=headers, cookies=cookies, json=request_body)
         except requests.exceptions.ConnectionError as e:
-            print("*ConnectionError*")
-            print(e)
+            logger.error("*ConnectionError*")
+            logger.error(e)
             return False
         self.csrf_cookie = response.cookies.get('csrftoken')
         self.hasSession = True

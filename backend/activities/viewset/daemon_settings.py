@@ -12,6 +12,9 @@ from system.utils import get_app_dir
 import json
 import os
 import signal
+import logging
+
+logger = logging.getLogger(f"django.{__name__}")
 
 class DaemonSettingsViewSet(viewsets.GenericViewSet):
     # デーモンプログラムの設定情報を取り扱うクラス。設定情報はデータベースではなく、ファイルに保存される。
@@ -37,7 +40,7 @@ class DaemonSettingsViewSet(viewsets.GenericViewSet):
             with open(self.file_path, "r") as f:
                 st_obj = json.load(f)
         except Exception as e:
-            print(e)
+            logger.error(e)
         return st_obj
 
     def set_file_object(self, obj):
