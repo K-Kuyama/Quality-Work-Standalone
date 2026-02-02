@@ -68,7 +68,7 @@ def setup_logger():
         if sys.platform == "darwin":
             log_dir = Path.home() / "Library/Application Support/Quality-Work/logs"
         elif sys.platform == "win32":
-            log_dir = Path(os.getenv("APPDATA")) / "Quality-Work/logs"
+            log_dir = Path(os.environ.get("LOCALAPPDATA")) / "Quality-Work/logs"
     else:
         # 通常のスクリプト実行の場合
         base_dir = Path(__file__).parent
