@@ -19,7 +19,7 @@ import logging
 from rest_framework.exceptions import ValidationError
 from django.db.models import Value
 from django.db.models.functions import Concat
-from tenant_schemas.storage import TenantFileSystemStorage
+
 from activities.models import ActivityPredictor, CategorizedActivity, Activity, AudioActivity
 from activities.modules.ai.predictor import Predictor
 from activities.modules.ai.util import labelToName, labelToNameforList, tokenize
@@ -32,6 +32,9 @@ from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
 
 from system.utils import get_app_dir
+
+if settings.QT_MULTI:
+    from tenant_schemas.storage import TenantFileSystemStorage
 
 logger = logging.getLogger(f"django.{__name__}")
 

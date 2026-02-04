@@ -16,8 +16,9 @@ import re
 import os
 import shutil
 
-from tenant_schemas.storage import TenantFileSystemStorage
 from system.models import DBUpdateHistory
+if settings.QT_MULTI:
+    from tenant_schemas.storage import TenantFileSystemStorage
 
 class DatabaseUploadSerializer(serializers.ModelSerializer):
     # アップロードされた情報を受け取って格納する時に使われるシリアライザー
@@ -199,55 +200,7 @@ from .DataExporter import DataExporter
 # management.call_command(loaddata.Command(), "test_data", verbosity=0)
 
 
-# DatabasMigrationViewのためのSerializer
-# DatabaseMigrationViewは現在使っていないので、折を見て削除
-'''
-class DatabaseMigrationSerializer(serializers.Serializer):
-    target = serializers.CharField(max_length=128)
-    result = serializers.CharField(max_length=128)
 
-
-class DatabaseMigrationView(generics.ListAPIView):
-    target_to_insert = [
-        ("activities.Activity", ["id", "start_time", "duration", "distance_x", "distance_y", 
-                                    "strokes", "scrolls", "app", "title"])
-    ]
-
-    target_to_copy =[
-        ("activities.Perspective", ["id", "name", "color", "use_def_color", "categorize_model"]),
-        ("activities.Category",["id", "name", "color", "perspective"]),
-        ("activities.CategorizedActivity", ["id", "app", "title", "category"]),
-        ("activities.CategorizedKeyWord", ["id", "word", "positive", "category"])
-
-    ]
-
-    file = None
-    serializer_class = DatabaseMigrationSerializer
-    #out_file = "dump.json"
-
-    def evaluate_params(self):
-        #print(f"->{self.request.query_params}")
-        params = self.request.query_params
-        if 'file' in params:
-            self.file = params.get('file')
-
-
-    @attach_decorator(settings.QT_MULTI,method_decorator(login_required)) 
-    def list(self, request, *args, **kwargs):
-        results =[]
-        self.evaluate_params()
-        de = DataExporter()
-        de.connect(self.file)
-        for target in self.target_to_insert:
-            r = de.writeTableData(target, False)
-            results.append({"target":target[0], "result":r})
-        for target in self.target_to_copy:
-            r = de.writeTableData(target, True)
-            results.append({"target":target[0], "result":r})
-        de.close()
-        serializer = self.get_serializer(results, many=True)
-        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-'''
         
 class TableMigrationSerializer(serializers.Serializer):
     target = serializers.CharField(max_length=128)

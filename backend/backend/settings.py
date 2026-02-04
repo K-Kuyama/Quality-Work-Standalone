@@ -29,20 +29,7 @@ if getattr(sys, "frozen", False):
 
 #DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
 
-# セッションは更新されてから10分でタイムアウトする。
-# SESSION_SAVE_EVERY_REQUEST = True でリクエストがあるごとにセッションは更新される
 
-#SESSION_COOKIE_AGE = 600
-#SESSION_SAVE_EVERY_REQUEST = True
-
-# .envファイルを読み込む
-#env = environ.Env()
-#env.read_env(os.path.join(BASE_DIR, '.env'))
-
-# .envファイルから各環境変数を読み込む
-#QT_DB_NAME= env('QT_DB_NAME')
-#QT_DB_USER=env('QT_DB_USER')
-#QT_DB_PASSWORD=env('QT_DB_PASSWORD')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -55,26 +42,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-#マルチテナント関連設定
-#TENANT_MODEL = "account.QtTenant" 
-'''
-SHARED_APPS = (
-    'tenant_schemas',  # mandatory, should always be before any django app
-    #'account', # you must list the app where your tenant model resides in
-    'django.contrib.contenttypes',
-    # everything below here is optional
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-)
 
-TENANT_APPS = (
-    'django.contrib.contenttypes',
-    'activities',
-)
-'''
 
 # Application definition
 
@@ -83,12 +51,12 @@ INSTALLED_APPS = [
     #'account',
     'system',
     'activities.apps.ActivitiesConfig',
-    'django.contrib.admin',
+    #'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    #'django.contrib.sessions',
+    #'django.contrib.messages',
+    #'django.contrib.staticfiles',
 ]
 
 MIDDLEWARE = [
@@ -152,23 +120,6 @@ DATABASES = {
 
 USE_POSTGRESQL = False
 
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
 
 
 # Internationalization

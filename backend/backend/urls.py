@@ -14,7 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
+#from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include
 
@@ -50,7 +50,7 @@ def index_view(request):
 
 if settings.QT_MULTI:
     urlpatterns = [
-        path('admin/', admin.site.urls),
+        #path('admin/', admin.site.urls),
         path('account/', include("account.urls")),
         path('api/', include("activities.urls")),
         path('', index_view, name='index'),
@@ -69,7 +69,7 @@ if settings.QT_MULTI:
     ]
 else:
     urlpatterns = [
-        path('admin/', admin.site.urls),
+        #path('admin/', admin.site.urls),
         path('system/', include("system.urls")),
         path('api/', include("activities.urls")),
         path('', index_view, name='index'),
