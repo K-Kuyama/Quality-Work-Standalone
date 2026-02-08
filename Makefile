@@ -23,3 +23,9 @@ module:
 	$(MAKE) module -C frontend
 	$(MAKE) module -C backend
 
+license:
+	$(MAKE) license-js -C frontend
+	$(MAKE) license -C backend
+	cp frontend/dist_package/*.txt Licenses/
+	cp backend/dist_package/licenses/*.txt Licenses/
+	
