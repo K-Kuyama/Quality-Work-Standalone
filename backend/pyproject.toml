@@ -3,6 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = "Backend using Django"
 authors = ["Kazuhiro Kuyama <kuyama@systemdesignk2.jp>"]
+package-mode = false
 readme = "README.md"
 
 [tool.poetry.dependencies]
