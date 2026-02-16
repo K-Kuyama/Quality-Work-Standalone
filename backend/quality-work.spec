@@ -41,15 +41,6 @@ a = Analysis(
         'sklearn.datasets','sklearn.cluster','sklearn.decomposition',
         'sklearn.tree','sklearn.ensemble','sklearn.neural_network',
         'sklearn.manifold','sklearn.mixture','sklearn.cross_decomposition',
-        #'scipy.ndimage',    # 画像処理（今回不要）
-        #'scipy.integrate',  # 数値積分（今回不要）
-        #'scipy.fft',        # 高速フーリエ変換（今回不要）
-        #'scipy.interpolate',# 補間処理（今回不要）
-        #'scipy.spatial',    # 空間幾何構造（k-NN等を使わないなら不要）
-        #'scipy.signal',     # 信号処理（今回不要）
-        #'scipy.cluster',    # クラスタリング（今回不要）
-        #'scipy.fft','scipy.signal','scipy.optimize','scipy.integrate',
-        #'scipy.stats','scipy.io','scipy.interpolate','scipy.ndimage','scipy.linalg',
     ],
     noarchive=False,
 )
@@ -84,9 +75,10 @@ exe = EXE(
     name='quality-work',
     debug=False,
     strip=True,
+    codesign_identity="Developer ID Application: Kazuhiro Kuyama (59AJ96922A)",
     upx=True,
     console=True,
-    icon='QTicon_S.ico',
+    icon='QW3.icns',
 )
 
 # Info.plist に含めるプライバシー説明文を定義
@@ -96,6 +88,7 @@ info_plist_content = {
     'CFBundleName': 'daemon_start',
     'CFBundlePackageType': 'APPL',
     'CFBundleShortVersionString': '1.0.0',
+    'CFBundleIconFile': 'QW3.icns',
     'NSMicrophoneUsageDescription': '音声デバイスの使用状況を確認するためにマイクへのアクセス権限が必要です。',
     'NSAppleEventsUsageDescription': 'アクティブなアプリケーション情報を取得するために、システムイベントの制御が必要です。',
     # macOSのセキュリティ緩和（これを入れないと署名後にロードエラーになります）
@@ -122,6 +115,8 @@ app = BUNDLE(
     name='quality-work.app',
     bundle_id='jp.systemdesignk2.quality-work',
     info_plist=info_plist_content,
+    icon='QW3.icns',
+    codesign_identity="Developer ID Application: Kazuhiro Kuyama (59AJ96922A)",
     )
     
 import shutil

@@ -6,6 +6,11 @@
 ・JavaScript関連ライブラリ: JS_LICENSES.txt
 ・本ソフトウェアのライセンス：LICENSE.txt
 
-リバースエンジニアリングに関する特記事項: 
-本ソフトウェアに使用されている一部のライブラリ（LGPLライセンス等）のデバッグおよび修正を目的とした
-範囲において、本ソフトウェアのリバースエンジニアリングを許可します。
+
+【LGPLに関する告知】
+本ソフトウェアは、以下のソフトウェアをLGPLv3ライセンスに基づき、下記ライブラリを動的にリンクして使用しています。
+
+・pystray (LGPLv3): https://github.com/moses-palmer/pystray 
+・pynput (LGPLv3): https://github.com/moses-palmer/pynput
+
+LGPLv3の規定に基づき、利用者は上記ライブラリの修正および、その修正を適用するためのデバッグを目的としたリバースエンジニアリングを行う権利を有します。
