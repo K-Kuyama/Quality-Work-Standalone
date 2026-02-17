@@ -13,6 +13,7 @@ import AudioActivityPage from './pages/AudioActivityPage';
 //import DBMigrationPage from './pages/DBMigrationPage'
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
+import AboutThisPage from './pages/AboutThisPage';
 //import TestPage from './TestPage'
 import {ShowPolicyContext, useShowPolicy} from "./Context"
 import Settings from './Settings';
@@ -54,6 +55,7 @@ function App(){
 				<Route path="/editor" element={<UserDefPage />} />
 				<Route path="/audios" element={<AudioActivityPage />} />
 				<Route path="/settings" element={<SettingsPage />} />
+				<Route path="/about_this" element={<AboutThisPage />} />
         	</Routes>
 
 			</ShowPolicyContext.Provider>

@@ -1478,6 +1478,38 @@ input#perspective_color{
 	font-size: small;
 }
 
+/* AboutThisPage.js */
+
+.w_sidebar{
+	width: 300px !important;
+	background-color: #575977;
+/*	overflow-y: scroll; */
+	font-size: small;
+}
+
+.n_contents{
+	width: calc(100% - 300px);
+}
+
+/* TextDocArea.js */
+
+.license_text{
+    color: #fffafa;
+    margin-right: 20px;
+    padding-left: 20px;
+    padding-top: 20px;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-height: 70vh;     /* 画面高さの70%まで */
+    overflow-y: auto;     /* 多すぎたら縦スクロール */
+}
+
+.license_pre {
+    white-space: pre-wrap;   /* 改行保持＋自動折り返し */
+    word-break: break-word;  /* 長い英単語も折り返す */
+    line-height: 1.6;
+}
+
 /* 共通的なコンポーネント */
 /* Pagination.js */
 

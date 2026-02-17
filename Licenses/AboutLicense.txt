@@ -2,9 +2,8 @@
 
 本ソフトウェアには、サードパーティが作成したオープンソースソフトウェア（OSS）が含まれています。
 各ライブラリの著作権表示およびライセンス条項の全文については、以下のファイルを参照してください。
-・Python関連ライブラリ: PY_LICENSES.txt 
-・JavaScript関連ライブラリ: JS_LICENSES.txt
-・本ソフトウェアのライセンス：LICENSE.txt
+・サードパーティーライブラリ(Python) PY_LICENSES.txt 
+・サードパーティーライブラリ(JavaScript) JS_LICENSES.txt
 
 
 【LGPLに関する告知】

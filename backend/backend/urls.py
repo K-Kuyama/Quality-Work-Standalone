@@ -85,6 +85,7 @@ else:
         path('editor', index_view, name='index'), 
         path('audios', index_view, name='index'), 
         path('settings', index_view, name='index'), 
+        path('about_this', index_view, name='index'),
         #path('data_and_files', index_view, name='index'),    
     ]
 

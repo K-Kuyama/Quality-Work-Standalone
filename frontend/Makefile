@@ -3,7 +3,7 @@ fileexists = $(cd ../backend && (shell ls | grep ${fname}))
 
 # 変数
 DIST_DIR := dist_package
-JS_LICENSE_FILE := $(DIST_DIR)/JS_LICENSES_ALL.txt
+#JS_LICENSE_FILE := $(DIST_DIR)/JS_LICENSES_ALL.txt
 EXCLUED_LIST := frontend
 
 env:
