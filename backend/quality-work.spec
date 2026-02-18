@@ -11,6 +11,7 @@ a = Analysis(
         ('QTicon_S.ico','.'),
         ('QW3.png','.'),
         ('frontend/*','frontend'),
+        ('frontend/licenses/*', 'frontend/licenses'),
         ('frontend/static/css/*','frontend/static/css'),
         ('frontend/static/js/*','frontend/static/js'),
         ('frontend/static/media/*','frontend/static/media'),

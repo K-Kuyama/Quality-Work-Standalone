@@ -226,14 +226,16 @@ function TimeChart(props){
 				//console.log('---Success ---');
 				//console.log(txt);
 				let res = JSON.parse(txt);
-                setFromTo([res[0].start_time, res[res.length-1].end_time]);
-                //console.log("set from_to :", [res[0].start_time, res[res.length-1].end_time])
-				let dt = createData(res);
-				//console.log(dt);
-				//let dts = getData()
-				//console.log(dts);
-				setData(dt);
-				setOptions(getOptions(dt, d1, d2, props.p_id, false));
+				if(res.length > 0){
+					setFromTo([res[0].start_time, res[res.length-1].end_time]);
+					//console.log("set from_to :", [res[0].start_time, res[res.length-1].end_time])
+					let dt = createData(res);
+					//console.log(dt);
+					//let dts = getData()
+					//console.log(dts);
+					setData(dt);
+					setOptions(getOptions(dt, d1, d2, props.p_id, false));
+				}
 				setHaveData(true);
 			})
 			.catch(error =>{
