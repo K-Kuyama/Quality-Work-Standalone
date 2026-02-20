@@ -69,7 +69,7 @@ function NavigationMenu(props){
                                 <Nav.Link href={Settings.HOME_PATH+"/editor"}>カテゴリーエディター</Nav.Link> 
                                 
                                 {/*<Nav.Link href={Settings.HOME_PATH+"/settings"}>設定</Nav.Link> */}
-                                <NavDropdown title="設定/他" id="category-nav-dropdown">
+                                <NavDropdown title="設定と情報" id="category-nav-dropdown">
                                     <NavDropdown.Item href={Settings.HOME_PATH+"/about_this"}> Quality-Work について </NavDropdown.Item>
                                     <NavDropdown.Item href={Settings.HOME_PATH+"/settings"}> 設定 </NavDropdown.Item>
                                 </NavDropdown>
