@@ -65,48 +65,58 @@ function TimeChartOption(props){
     };
 
     const displayDetail = () =>{
-        let range = getRange(props.from_to);
-        //console.log("range",range);
-        setRange(range);
-        let policy = ctx.policy
-        let params = {start : range[0], end : range[1], p_id : props.p_id, show_policy : policy};
+        if (props.from_to.length > 0){
+            let range = getRange(props.from_to);
+            //console.log("range",range);
+            setRange(range);
+            let policy = ctx.policy
+            let params = {start : range[0], end : range[1], p_id : props.p_id, show_policy : policy};
 
-        let query = new URLSearchParams(params);
-        let target = Settings.HOME_PATH+'/api/Activity/working_time_chart/?'
-        if(Settings.DEVELOP){
-            target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/working_time_chart/?'
-        }
-        fetch(target + query	
-        )
-        .then(response => {
-            return response.json();
-        })
-        .then(result =>{
-            const txt = JSON.stringify(result, null,' ');
-            //console.log('---Success ---');
-            //console.log(txt);
-            let res = JSON.parse(txt);
-            let dt = createData(res);
-            //console.log(dt);
-            //let dts = getData()
-            //console.log(dts);
-            let op = getOptions(dt, range[0], range[1], props.p_id, true);
-            setData([dt,op]);
+            let query = new URLSearchParams(params);
+            let target = Settings.HOME_PATH+'/api/Activity/working_time_chart/?'
+            if(Settings.DEVELOP){
+                target = Settings.DEVELOPMENT_HOME_PATH+'/api/Activity/working_time_chart/?'
+            }
+            fetch(target + query	
+            )
+            .then(response => {
+                return response.json();
+            })
+            .then(result =>{
+                const txt = JSON.stringify(result, null,' ');
+                //console.log('---Success ---');
+                //console.log(txt);
+                let res = JSON.parse(txt);
+                let dt = createData(res);
+                //console.log(dt);
+                //let dts = getData()
+                //console.log(dts);
+                let op = getOptions(dt, range[0], range[1], props.p_id, true);
+                setData([dt,op]);
 
-        })
-        .catch(error =>{
+            })
+            .catch(error =>{
+                setData([]);
+                console.error('----Error---');
+                console.error(error);
+            })
+            //setRange(range);
+            //setVisibility(true);
+        } else {
             setData([]);
-            console.error('----Error---');
-            console.error(error);
-        })
-        //setRange(range);
-        //setVisibility(true);
+        }
     }
 
     useEffect(() => {
         //console.log("g_data", g_data);
         //console.log("props.p_id",props.p_id);
         setPerspective(props.p_id);
+        let elm = document.getElementById("detailed");
+        if (props.from_to.length >0){
+            elm.disabled = false;
+        } else {
+            elm.disabled = true;
+        }
     }, [props]);
 
 
@@ -129,7 +139,7 @@ function TimeChartOption(props){
 	} else {
 		return(
 			<div className="p_info_tail">
-				<Button type="button" className="btn btn-ppheader" data-bs-toggle="button" size="sm" style={{margin: "6px", width: "80px"}} onClick={(e)=> displayDetail()} >
+				<Button type="button" className="btn btn-ppheader" id="detailed" data-bs-toggle="button" size="sm" style={{margin: "6px", width: "80px"}} onClick={(e)=> displayDetail()} >
     				詳細
     			</Button>
             </div>

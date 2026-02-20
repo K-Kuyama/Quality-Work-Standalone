@@ -8,11 +8,8 @@ env:
 	$(MAKE) $(ENV_TARGET)
 	$(MAKE) license-py -C backend
 	$(MAKE) license-js -C frontend
-	mkdir -p backend/licenses
-	cp Licenses/* backend/licenses/
-	cp frontend/dist_package/*.txt backend/licenses/
-	cp backend/dist_package/licenses/*.txt backend/licenses/
-
+	cp frontend/dist_package/*.txt Licenses/
+	cp backend/dist_package/licenses/*.txt Licenses/
 
 env_mac:
 	$(MAKE) env -C backend
@@ -28,7 +25,8 @@ env_win:
 
 module:
 	$(MAKE) module -C frontend
-	mv backend/licenses backend/frontend/
+	mkdir -p backend/frontend/licenses
+	cp Licenses/* backend/frontend/licenses/
 	$(MAKE) module -C backend
 
 license-txt:

@@ -235,6 +235,9 @@ function TimeChart(props){
 					//console.log(dts);
 					setData(dt);
 					setOptions(getOptions(dt, d1, d2, props.p_id, false));
+				} else {
+					setFromTo([]);
+					setData([]);
 				}
 				setHaveData(true);
 			})
