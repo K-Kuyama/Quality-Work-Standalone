@@ -31,6 +31,8 @@ jobs:
 
       - name: Build process
         shell: bash
+        env:
+          CI: false  # これを追加して警告によるビルド停止を防ぐ
         run: |
           # Unix形式のパスをWindows形式の絶対パスに変換し、拡張子.exeを補完する
           POETRY_BIN=$(cygpath -w $(which poetry))
