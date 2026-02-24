@@ -32,13 +32,15 @@ jobs:
       - name: Build process
         shell: bash
         run: |
+          # 実行環境における poetry の場所を確認
+          POETRY_BIN=$(which poetry)
+          
+          # 引数として POETRY 変数を渡す。
           # 環境構築（Makefile内のターゲット）
-          # すでに poetry install 等は済んでいるので、
-          # Makefile内の 'env' で二重にインストールされないか確認してください
-          make env
+          make env POETRY="$POETRY_BIN"
           
           # ビルド実行
-          make module
+          make module POETRY="$POETRY_BIN"
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
