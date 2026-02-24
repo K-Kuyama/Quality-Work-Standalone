@@ -23,9 +23,25 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Poetry
+        # 確実にパスを通し、かつ実行可能にするための設定
         run: |
           powershell (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-          echo "$HOME\AppData\Roaming\Python\Scripts" >> $GITHUB_PATH
+          # WindowsでのPoetryのデフォルトインストール先をPATHに追加
+          echo "$ISL\AppData\Roaming\Python\Scripts" >> $GITHUB_PATH
+          echo "$APPDATA\Python\Scripts" >> $GITHUB_PATH
+          # ユーザー環境のPoetryパスも追加
+          echo "$USERPROFILE\.local\bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        # ここで 'poetry' が見つからないと言われるのを防ぐため、
+        # もし 'poetry' でダメならフルパスで叩くようにシェルで工夫します
+        run: |
+          $POETRY_PATH = "$USERPROFILE\.local\bin\poetry"
+          if (Test-Path $POETRY_PATH) {
+            & $POETRY_PATH install
+          } else {
+            poetry install
+          }
 
       - name: Build process
         # Windows上でUnixライクなコマンド(cp, mkdir -p)を確実に動かすためbashを指定
