@@ -32,9 +32,10 @@ jobs:
       - name: Build process
         shell: bash
         run: |
-          # 実行環境における poetry の場所を確認
-          POETRY_BIN=$(which poetry)
-          PYTHON_BIN=$(which python)
+          # Unix形式のパスをWindows形式の絶対パスに変換し、拡張子.exeを補完する
+          POETRY_BIN=$(cygpath -w $(which poetry))
+          PYTHON_BIN=$(cygpath -w $(which python).exe)
+          
           echo "Using poetry at: $POETRY_BIN"
           echo "Using python at: $PYTHON_BIN"
           
