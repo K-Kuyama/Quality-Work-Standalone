@@ -29,13 +29,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
-        # bashを指定することで、Makefile実行時に必要なパス環境を安定させます
-        shell: bash
-        run: |
-          poetry install
-          npm install
-
       - name: Build process
         shell: bash
         run: |
