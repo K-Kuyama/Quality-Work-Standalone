@@ -6,7 +6,7 @@ IGNORE_PKGS := pip setuptools wheel pip-licenses pyinstaller pyinstaller-hooks-c
 PYTHON_MODULE := python3.11
 
 env:
-	poetry env use $(PYTHON_MODULE)
+	#poetry env use $(PYTHON_MODULE)
 	poetry install
 	#poetry add pyinstaller
 	#poetry add pywin32
