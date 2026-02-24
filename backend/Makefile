@@ -3,7 +3,7 @@ APP_NAME := quality-work
 DIST_DIR := dist_package
 LICENSE_DIR := $(DIST_DIR)/licenses
 IGNORE_PKGS := pip setuptools wheel pip-licenses pyinstaller pyinstaller-hooks-contrib backend
-PYTHON_MODULE ?= python3.11
+PYTHON_MODULE ?= python3.12
 POETRY ?= poetry
 
 env:
