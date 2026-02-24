@@ -1,0 +1,47 @@
+name: Build with Makefile (Poetry & NPM)
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'poetry'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # プロジェクトに合わせて調整してください
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Poetry
+        run: |
+          powershell (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+          echo "$HOME\AppData\Roaming\Python\Scripts" >> $GITHUB_PATH
+
+      - name: Build process
+        # Windows上でUnixライクなコマンド(cp, mkdir -p)を確実に動かすためbashを指定
+        shell: bash
+        run: |
+          # 1. 環境構築 (backend/frontendの両方)
+          make env
+          
+          # 2. ビルド実行 (PyInstallerまで)
+          # Makefile内の 'module' ターゲットを呼び出す
+          make module
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quality-Work-Standalone-Package  # Artifactの名前
+          # フォルダ全体を指定します。
+          # backend/dist/ の下に PyInstaller が作ったフォルダ（APP_NAME）が生成されているはずです。
+          path: backend/dist/quality-work/
