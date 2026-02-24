@@ -34,13 +34,16 @@ jobs:
         run: |
           # 実行環境における poetry の場所を確認
           POETRY_BIN=$(which poetry)
+          PYTHON_BIN=$(which python)
+          echo "Using poetry at: $POETRY_BIN"
+          echo "Using python at: $PYTHON_BIN"
           
           # 引数として POETRY 変数を渡す。
           # 環境構築（Makefile内のターゲット）
-          make env POETRY="$POETRY_BIN"
+          make env POETRY="$POETRY_BIN" PYTHON_MODULE="$PYTHON_BIN"
           
           # ビルド実行
-          make module POETRY="$POETRY_BIN"
+          make module POETRY="$POETRY_BIN" PYTHON_MODULE="$PYTHON_BIN"
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
