@@ -1,9 +1,9 @@
-name: Build for Windows (Poetry & NPM)
+name: Build for MacOS Apple Silicon (Poetry & NPM)
 on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: macos-latest  # Apple Silicon (M1/M2) ランナーが起動します
 
     steps:
       - name: Checkout code
@@ -12,7 +12,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12.1'
+          python-version: '3.11.4'
           # ここで cache: 'poetry' は書かない（Poetryインストール前なのでエラーになる）
 
       - name: Install Poetry
@@ -34,22 +34,15 @@ jobs:
         env:
           CI: false  # これを追加して警告によるビルド停止を防ぐ
         run: |
-          # Unix形式のパスをWindows形式の絶対パスに変換し、拡張子.exeを補完する
-          POETRY_BIN=$(cygpath -w $(which poetry))
-          PYTHON_BIN=$(cygpath -w $(which python).exe)
-
-          echo "Using poetry at: $POETRY_BIN"
-          echo "Using python at: $PYTHON_BIN"
-          
-          # 引数として POETRY 変数を渡す。
           # 環境構築（Makefile内のターゲット）
-          make env POETRY="$POETRY_BIN" PYTHON_MODULE="$PYTHON_BIN"
+          make env
           
           # ビルド実行
-          make module POETRY="$POETRY_BIN" PYTHON_MODULE="$PYTHON_BIN"
+          make module
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Quality-Work-Standalone-Package
+          name: Quality-Work-MacOS-App
+          # PyInstallerが作る .app フォルダ、または dist 以下の成果物を指定
           path: backend/dist/quality-work/

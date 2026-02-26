@@ -12,7 +12,7 @@ env:
 	cp backend/dist_package/licenses/*.txt Licenses/
 
 env_mac:
-	$(MAKE) env -C backend
+	$(MAKE) env -C backend PYTHON_MODULE=python3.11
 	$(MAKE) env -C frontend
 
 env_win:
