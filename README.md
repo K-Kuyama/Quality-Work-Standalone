@@ -33,11 +33,6 @@ By capturing and visualizing the daily tasks , Quality-Work provides the insight
 * Windows (x64)
 * MacOS (Apple Silicon)
 
-## License
-
-Copyright (c) 2025 Kazuhiro Kuyama, System Design K2
-
-Licensed under the MIT License
 
 ## Build & Development
 
@@ -103,4 +98,29 @@ Right-click the tray icon to access the following options:
 
 * __Exit:__ Completely shut down the application.
 
+## Privacy Policy
 
+This application is designed with privacy as a top priority. It collects specific usage data to provide its core functionality, but handles all information locally.
+
+### Data Collection
+The following information is collected from your local machine:
+* **Window Activity**: Names of active windows, the time they became active, and the duration of activity.
+* **Input Statistics**: The number of keystrokes, mouse clicks, and the distance of mouse movement during active window periods.
+* **Audio Events**: Start and end timestamps of when audio output device ports are opened.
+
+### Data Storage and Privacy
+* **Local Storage Only**: All collected information is stored locally on your computer.
+* **No Data Transmission**: No data is ever transmitted to external servers, via the network, or to any third parties.
+* **Local Access**: Your data is only accessible through the software running on your own machine for your personal use.
+
+### Data Storage and Deletion
+* **Storage Location**: Collected data is stored in a local database file at:
+  * **Windows**: `%LOCALAPPDATA%\Quality-Work` (typically `C:\Users\<YourUsername>\AppData\Local\Quality-Work`)
+  * **macOS**: `~/Library/Application Support/Quality-Work`
+* **Data Erasure**: To permanently delete all collected information and your personal activity history, simply close the application and delete the above directory or the database file within it.
+
+## License
+
+Copyright (c) 2025 Kazuhiro Kuyama, System Design K2
+
+Licensed under the MIT License

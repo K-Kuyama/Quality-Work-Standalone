@@ -117,7 +117,6 @@ app = BUNDLE(
     bundle_id='jp.systemdesignk2.quality-work',
     info_plist=info_plist_content,
     icon='QW3.icns',
-    codesign_identity="Developer ID Application: Kazuhiro Kuyama (59AJ96922A)",
     )
     
 import shutil
