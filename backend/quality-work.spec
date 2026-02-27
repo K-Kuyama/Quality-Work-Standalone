@@ -76,7 +76,6 @@ exe = EXE(
     name='quality-work',
     debug=False,
     strip=True,
-    codesign_identity="Developer ID Application: Kazuhiro Kuyama (59AJ96922A)",
     upx=True,
     console=True,
     icon='QW3.icns',
