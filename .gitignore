@@ -5,3 +5,4 @@ backend/activities/serializers/.DS_Store
 backend/activities/viewset/.DS_Store
 frontend/.DS_Store
 frontend/src/.DS_Store
+.DS_Store

@@ -8,8 +8,9 @@ a = Analysis(
         # --- アプリ固有データ ---
         ('media/audio_settings.json','media'),
         ('fixture.json','.'),
-        ('QTicon_S.ico','.'),
-        ('QW3.png','.'),
+        ('QW.icns','.'),
+        ('QWTemplate.png','.'),
+        ('QWTemplate@2x.png','.'),
         ('frontend/*','frontend'),
         ('frontend/licenses/*', 'frontend/licenses'),
         ('frontend/static/css/*','frontend/static/css'),
@@ -78,7 +79,7 @@ exe = EXE(
     strip=True,
     upx=True,
     console=True,
-    icon='QW3.icns',
+    icon='QW.icns',
 )
 
 # Info.plist に含めるプライバシー説明文を定義
@@ -88,7 +89,7 @@ info_plist_content = {
     'CFBundleName': 'daemon_start',
     'CFBundlePackageType': 'APPL',
     'CFBundleShortVersionString': '1.0.0',
-    'CFBundleIconFile': 'QW3.icns',
+    'CFBundleIconFile': 'QW.icns',
     'NSMicrophoneUsageDescription': '音声デバイスの使用状況を確認するためにマイクへのアクセス権限が必要です。',
     'NSAppleEventsUsageDescription': 'アクティブなアプリケーション情報を取得するために、システムイベントの制御が必要です。',
     # macOSのセキュリティ緩和（これを入れないと署名後にロードエラーになります）
@@ -115,7 +116,8 @@ app = BUNDLE(
     name='quality-work.app',
     bundle_id='jp.systemdesignk2.quality-work',
     info_plist=info_plist_content,
-    icon='QW3.icns',
+    icon='QW.icns',
+    codesign_identity="Developer ID Application: Kazuhiro Kuyama (59AJ96922A)",
     )
     
 import shutil

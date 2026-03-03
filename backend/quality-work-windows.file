@@ -7,8 +7,9 @@ a = Analysis(
     datas=[
         ('media/audio_settings.json','media'),
         ('fixture.json','.'),
-        ('QTicon_S.ico','.'),
-        ('QW3.png','.'),
+        ('QW.ico','.'),
+        ('QWTemplate.png','.'),
+        ('QWTemplate@2x.png','.'),
         ('frontend/*','frontend/'),
         ('frontend/licenses/*', 'frontend/licenses'),
         ('frontend/static/css/*','frontend/static/css'),
@@ -82,7 +83,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='QTicon_S.ico',
+    icon='QW.ico',
 )
 
 coll = COLLECT(

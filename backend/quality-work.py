@@ -7,7 +7,7 @@ import signal
 from pathlib import Path
 import logging
 import pystray
-from PIL import Image
+from PIL import Image, ImageOps
 
 from awatch.aw_start import aw_start
 from awatch.audio_watcher_start import audio_watcher_start
@@ -166,6 +166,9 @@ def stop_all(icon, item):
 def get_icon_file():
     
     # PyInstallerで同梱されたリソースの実体パスを返す
+    # macOSでは、ファイル名に Template という文字列が含まれていると、それを「色の反転を制御すべき特殊な画像」だと判断。
+    # 高精細ディスプレイ環境であれば、OSやライブラリが自動的に QWTemplate@2x.png を探しに行ってくれる。
+    
     if getattr(sys, "frozen", False):
         # PyInstaller 実行時
         base_path = Path(sys._MEIPASS)
@@ -174,22 +177,30 @@ def get_icon_file():
         #base_path = Path(__file__).resolve().parent.parent
         base_path = Path(__file__).parent
     if sys.platform == "darwin":
-        file_name = "QW3.png"
+        file_name = "QWTemplate.png"
     else:
-        file_name = "QTicon_S.ico"
+        file_name = "QW.ico"
     return base_path / file_name
 
 
-def run_menu():
-    # --- アイコンとメニューの作成 ---
-    # 16x16 or 32x32のアイコン画像（icon.png）を読み込み
-    
-    
-    #image = Image.open("QTicon_S.ico")
-    #if sys.platform == "darwin":
-    #    image = Image.open("QW3.png")
-    image = Image.open(get_icon_file())
+def get_tinted_icon(path, color="#555555"):
+    # 透過PNGのフォアグラウンド色を指定した色に変更する
+    image = Image.open(path).convert("RGBA")
+    # アルファチャネル（透明度）を分離
+    alpha = image.getchannel('A')
+    # 新しい色の画像を作成し、元の透明度を適用する
+    new_image = Image.new("RGBA", image.size, color)
+    new_image.putalpha(alpha)
+    return new_image
 
+def run_menu():
+
+    # 1. 画像を読み込む
+    image_file = get_icon_file()
+    if sys.platform == "darwin":
+        image = get_tinted_icon(image_file, color="#FFFFFF")
+    else:
+        image = Image.open(image_file)
     menu = pystray.Menu(
 
         pystray.MenuItem(
@@ -208,7 +219,9 @@ def run_menu():
         #pystray.MenuItem("終了", lambda icon, item: icon.stop())
     )
 
-    icon = pystray.Icon("QualityWork", image, "Quality-Work", menu,
+    icon = pystray.Icon("QualityWork",
+                        image,
+                        "Quality-Work", menu,
                         # Windowsの左クリック用。Macでは設定しても無害（無視されるだけ）。
                         default_action=open_browser)
 

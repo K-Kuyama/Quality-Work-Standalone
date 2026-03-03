@@ -112,11 +112,14 @@ function TimeChartOption(props){
         //console.log("props.p_id",props.p_id);
         setPerspective(props.p_id);
         let elm = document.getElementById("detailed");
-        if (props.from_to.length >0){
-            elm.disabled = false;
-        } else {
-            elm.disabled = true;
+        if(elm){
+            if (props.from_to.length >0){
+                elm.disabled = false;
+            } else {
+                elm.disabled = true;
+            }
         }
+        setData(undefined);
     }, [props]);
 
 
