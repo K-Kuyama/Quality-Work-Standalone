@@ -47,14 +47,25 @@ jobs:
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: |
           echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          
+          # 一時キーチェーンの作成
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
+          
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # 証明書のインポート (-A で全アプリへのアクセスを許可)
           security import certificate.p12 -k $KEYCHAIN_PATH -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12
+          
+          # ★重要: パーティションリストの更新 (codesignを追加)
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | xargs)
+          
+          # ★最重要: キーチェーンの検索パスに作成したものを追加 (既存のリストも保持する)
+          # これをしないと、codesignが新しいキーチェーン内を探してくれません
+          EXISTING_KEYCHAINS=$(security list-keychains -d user | xargs)
+          security list-keychains -d user -s $KEYCHAIN_PATH $EXISTING_KEYCHAINS
 
 # --- 2. Appバンドルの署名と最初の公証 ---
       - name: Sign and Notarize App
@@ -76,14 +87,24 @@ jobs:
           find "$APP_PATH" -type f | while read f; do
               if file "$f" | grep -q "Mach-O"; then
                   echo "Signing Mach-O: $f"
-                  codesign --force --options runtime --timestamp --sign "$IDENTITY" "$f"
+                  # ★修正: --keychain フラグを追加
+                  codesign --force --options runtime --timestamp \
+                           --keychain "$KEYCHAIN_PATH" \
+                           --sign "$IDENTITY" "$f"
               fi
           done
 
           echo "--- Step 3: Bundle Signing ---"
-          codesign --force --options runtime --timestamp --entitlements "$ENTITLEMENTS" --sign "$IDENTITY" "$APP_PATH/Contents/MacOS/$APP_NAME"
-          codesign --force --options runtime --timestamp --entitlements "$ENTITLEMENTS" --sign "$IDENTITY" "$APP_PATH"
-
+          codesign --force --options runtime --timestamp \
+                   --keychain "$KEYCHAIN_PATH" \
+                   --entitlements "$ENTITLEMENTS" \
+                   --sign "$IDENTITY" "$APP_PATH/Contents/MacOS/$APP_NAME"
+          
+          codesign --force --options runtime --timestamp \
+                   --keychain "$KEYCHAIN_PATH" \
+                   --entitlements "$ENTITLEMENTS" \
+                   --sign "$IDENTITY" "$APP_PATH"
+                   
           echo "--- Step 4: Notarize App ---"
           ditto -c -k --keepParent "$APP_PATH" "app_submit.zip"
           xcrun notarytool submit "app_submit.zip" --apple-id "$APPLE_ID" --password "$PASSWORD" --team-id "$TEAM_ID" --wait
