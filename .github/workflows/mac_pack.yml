@@ -1,0 +1,141 @@
+name: Build, signning an packaging for MacOS Apple Silicon (Poetry & NPM)
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: macos-latest  # Apple Silicon (M1/M2) ランナーが起動します
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.4'
+          # ここで cache: 'poetry' は書かない（Poetryインストール前なのでエラーになる）
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build process
+        shell: bash
+        env:
+          CI: false  # これを追加して警告によるビルド停止を防ぐ
+        run: |
+          # 環境構築（Makefile内のターゲット）
+          make env
+          
+          # ビルド実行
+          make module
+
+# --- 1. 証明書のインポート ---
+      - name: Import macOS Certificate
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security import certificate.p12 -k $KEYCHAIN_PATH -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | xargs)
+
+# --- 2. Appバンドルの署名と最初の公証 ---
+      - name: Sign and Notarize App
+        env:
+          APP_NAME: "quality-work"
+          IDENTITY: ${{ secrets.MACOS_CERT_IDENTITY }}    # Developer ID Application: xxxx (xxx)
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          ENTITLEMENTS: "for_packaging/entitlements.plist"
+        run: |
+          APP_PATH="backend/dist/quality-work.app"
+          
+          echo "--- Step 1: Cleaning attributes ---"
+          codesign --remove-signature --deep "$APP_PATH"
+          /usr/bin/xattr -rc "$APP_PATH"
+
+          echo "--- Step 2: Individual Mach-O Signing ---"
+          find "$APP_PATH" -type f | while read f; do
+              if file "$f" | grep -q "Mach-O"; then
+                  echo "Signing Mach-O: $f"
+                  codesign --force --options runtime --timestamp --sign "$IDENTITY" "$f"
+              fi
+          done
+
+          echo "--- Step 3: Bundle Signing ---"
+          codesign --force --options runtime --timestamp --entitlements "$ENTITLEMENTS" --sign "$IDENTITY" "$APP_PATH/Contents/MacOS/$APP_NAME"
+          codesign --force --options runtime --timestamp --entitlements "$ENTITLEMENTS" --sign "$IDENTITY" "$APP_PATH"
+
+          echo "--- Step 4: Notarize App ---"
+          ditto -c -k --keepParent "$APP_PATH" "app_submit.zip"
+          xcrun notarytool submit "app_submit.zip" --apple-id "$APPLE_ID" --password "$PASSWORD" --team-id "$TEAM_ID" --wait
+
+          echo "--- Step 5: Staple App ---"
+          xcrun stapler staple "$APP_PATH"
+          
+# --- 3. DMGの作成と2回目の公証 ---
+      - name: Create and Notarize DMG
+        env:
+          APP_NAME: "quality-work"
+          IDENTITY: ${{ secrets.MACOS_CERT_IDENTITY }}    # Developer ID Application: xxxx (xxx)
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          brew install create-dmg
+          STAGING_DIR="quality-work-dmg"
+          APP_PATH="backend/dist/quality-work.app"
+          mkdir -p "$STAGING_DIR"
+          
+          # ステープル済みのアプリをコピー
+          ditto "$APP_PATH" "$STAGING_DIR/quality-work.app"
+          cp "for_packaging/NOTICE.txt" "$STAGING_DIR/" || true
+
+          echo "--- Step 1: Create DMG ---"
+          create-dmg \
+            --volname "$APP_NAME Installer" \
+            --volicon "backend/QW.icns" \
+            --background "for_packaging/${APP_NAME}_bg.png" \
+            --window-pos 200 120 --window-size 600 450 --icon-size 80 \
+            --icon "$APP_NAME.app" 150 120 --icon "NOTICE.txt" 300 300 \
+            --hide-extension "$APP_NAME.app" --app-drop-link 450 120 \
+            "$APP_NAME.dmg" "$STAGING_DIR"
+
+          echo "--- Step 2: Sign DMG ---"
+          codesign --force --verify --verbose --sign "$IDENTITY" "$APP_NAME.dmg"
+
+          echo "--- Step 3: Notarize DMG ---"
+          xcrun notarytool submit "$APP_NAME.dmg" --apple-id "$APPLE_ID" --password "$PASSWORD" --team-id "$TEAM_ID" --wait
+
+          echo "--- Step 4: Staple DMG ---"
+          xcrun stapler staple "$APP_NAME.dmg"
+
+          echo "--- Final Verification ---"
+          spctl --assess --verbose --type open --context context:primary-signature "$APP_NAME.dmg"
+
+      - name: Upload Artifact
+        env:
+          APP_NAME: "quality-work"
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quality-Work-MacOS-DMG
+          # PyInstallerが作る .app フォルダ、または dist 以下の成果物を指定
+          path: ${{ env.APP_NAME }}.dmg
