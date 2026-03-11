@@ -59,11 +59,17 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           
           # 証明書のインポート (-A で全アプリへのアクセスを許可)
-          security import certificate.p12 -k $KEYCHAIN_PATH -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12
-          
+          #security import certificate.p12 -k $KEYCHAIN_PATH -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12
+          security import certificate.p12 -k $KEYCHAIN_PATH -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12 -T /usr/bin/codesign
+
           # ★重要: パーティションリストの更新 (codesignを追加)
+          #security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          
+
+          # デフォルトキーチェーンの一時的な切り替え
+          # これにより、OSが「まずどこを探すべきか」を迷わなくなります
+          security default-keychain -s $KEYCHAIN_PATH
+
           # ★最重要: キーチェーンの検索パスに作成したものを追加 (既存のリストも保持する)
           # これをしないと、codesignが新しいキーチェーン内を探してくれません
           EXISTING_KEYCHAINS=$(security list-keychains -d user | xargs)
@@ -80,6 +86,10 @@ jobs:
           ENTITLEMENTS: "for_packaging/entitlements.plist"
         run: |
           APP_PATH="backend/dist/quality-work.app"
+          
+          # ★デバッグ用：証明書が認識されているかリスト表示
+          echo "--- Checking Identity in Keychain ---"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
           
           echo "--- Step 1: Cleaning attributes ---"
           codesign --remove-signature --deep "$APP_PATH"
