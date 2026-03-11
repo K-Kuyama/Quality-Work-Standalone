@@ -60,7 +60,11 @@ jobs:
           
           # 証明書のインポート (-A で全アプリへのアクセスを許可)
           #security import certificate.p12 -k $KEYCHAIN_PATH -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12
-          security import certificate.p12 -k $KEYCHAIN_PATH -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12 -T /usr/bin/codesign
+          # -A ではなく、あえてツールを個別に指定して許可を与える方法を試します
+          security import certificate.p12 -k $KEYCHAIN_PATH -P "$MACOS_CERTIFICATE_PWD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security \
+            -T /usr/bin/productsign
 
           # ★重要: パーティションリストの更新 (codesignを追加)
           #security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
@@ -86,10 +90,11 @@ jobs:
           ENTITLEMENTS: "for_packaging/entitlements.plist"
         run: |
           APP_PATH="backend/dist/quality-work.app"
-          
+
           # ★デバッグ用：証明書が認識されているかリスト表示
           echo "--- Checking Identity in Keychain ---"
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+          security find-certificate -a "$KEYCHAIN_PATH"
           
           echo "--- Step 1: Cleaning attributes ---"
           codesign --remove-signature --deep "$APP_PATH"
