@@ -50,6 +50,8 @@ jobs:
           
           # 一時キーチェーンの作成
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          # 次のステップでも KEYCHAIN_PATH を使えるようにする
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
           
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
@@ -84,13 +86,16 @@ jobs:
           /usr/bin/xattr -rc "$APP_PATH"
 
           echo "--- Step 2: Individual Mach-O Signing ---"
+          # (念のためデバッグ用にパスを表示)
+          echo "Using keychain at: $KEYCHAIN_PATH"
+
           find "$APP_PATH" -type f | while read f; do
               if file "$f" | grep -q "Mach-O"; then
                   echo "Signing Mach-O: $f"
                   # ★修正: --keychain フラグを追加
                   codesign --force --options runtime --timestamp \
                            --keychain "$KEYCHAIN_PATH" \
-                           --sign "59AJ96922A" "$f"
+                           --sign "$IDENTITY" "$f"
               fi
           done
 
@@ -98,12 +103,12 @@ jobs:
           codesign --force --options runtime --timestamp \
                    --keychain "$KEYCHAIN_PATH" \
                    --entitlements "$ENTITLEMENTS" \
-                   --sign "59AJ96922A" "$APP_PATH/Contents/MacOS/$APP_NAME"
+                   --sign "$IDENTITY" "$APP_PATH/Contents/MacOS/$APP_NAME"
           
           codesign --force --options runtime --timestamp \
                    --keychain "$KEYCHAIN_PATH" \
                    --entitlements "$ENTITLEMENTS" \
-                   --sign "59AJ96922A" "$APP_PATH"
+                   --sign "$IDENTITY" "$APP_PATH"
 
           echo "--- Step 4: Notarize App ---"
           ditto -c -k --keepParent "$APP_PATH" "app_submit.zip"
