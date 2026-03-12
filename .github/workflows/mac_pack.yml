@@ -83,8 +83,7 @@ jobs:
       - name: Sign and Notarize App
         env:
           APP_NAME: "quality-work"
-          #IDENTITY: ${{ secrets.MACOS_CERT_IDENTITY }}    
-          IDENTITY: "Developer ID Application: Kazuhiro Kuyama (59AJ96922A)"
+          IDENTITY: ${{ secrets.MACOS_CERT_IDENTITY }}    
           APPLE_ID: ${{ secrets.APPLE_ID }}
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
