@@ -84,7 +84,7 @@ jobs:
         env:
           APP_NAME: "quality-work"
           #IDENTITY: ${{ secrets.MACOS_CERT_IDENTITY }}    
-          IDENTITY: "59AJ96922A"
+          IDENTITY: "Developer ID Application: Kazuhiro Kuyama (59AJ96922A)"
           APPLE_ID: ${{ secrets.APPLE_ID }}
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
