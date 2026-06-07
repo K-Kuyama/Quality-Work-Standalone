@@ -11,6 +11,7 @@ a = Analysis(
         ('QW.icns','.'),
         ('QWTemplate.png','.'),
         ('QWTemplate@2x.png','.'),
+        ('QwLogo.png','.'),
         ('frontend/*','frontend'),
         ('frontend/licenses/*', 'frontend/licenses'),
         ('frontend/static/css/*','frontend/static/css'),

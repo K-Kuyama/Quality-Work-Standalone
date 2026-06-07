@@ -13,7 +13,8 @@ from awatch.aw_start import aw_start
 from awatch.audio_watcher_start import audio_watcher_start
 from qtserver import server_start
 from bootstrap.bootstrap import bootstart
-#from bootstrap.QwMenu import QwMenu, run_menu
+from bootstrap.MsixMigrator import migrate_msix_data
+from bootstrap.SplashScreen import show_splash_screen
 import configparser
 
 '''
@@ -236,6 +237,16 @@ def run_menu():
 CONFIG_FILE = 'config.ini'
 EV_PRODUCER_CLASS = "HttpEventProducerLocal"
 
+CURRENT_VERSION = "3.6"
+CURRENT_SCHEMA_VERSION = 3
+
+#Splashウインドウの表示
+show_splash_screen(CURRENT_VERSION)
+
+# Windows StoreerotSからダウンロードしたVer3.5のMSIIXからの移行
+if sys.platform == "win32":
+    migrate_msix_data()
+
 #ロガーを取得する
 logger = setup_logger()
 
@@ -256,7 +267,7 @@ signal.signal(signal.SIGINT, handler)
 
 # データベースファイルのチェック
 # 初回はマイグレーションを行う
-bootstart()
+bootstart(CURRENT_SCHEMA_VERSION)
 
 # Webサーバーのスタート
 if EV_PRODUCER_CLASS == "HttpEventProducerLocal":

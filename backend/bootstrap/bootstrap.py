@@ -7,8 +7,8 @@ from pathlib import Path
 from system.utils import get_app_dir
 from .Migrator import MigratorManager
 
-
-CURRENT_SCHEMA_VERSION = 3
+# DBスキーマのバージョン
+CURRENT_SCHEMA_VERSION = None
 
 
 #### DB関係のファイルパス取得関数
@@ -112,7 +112,8 @@ def migrate_db():
 
         return True
     
-def bootstart():
+def bootstart(schema_version):
+    CURRENT_SCHEMA_VERSION = schema_version
     migrate_db()
     migrate_audio_conf()
     return True
