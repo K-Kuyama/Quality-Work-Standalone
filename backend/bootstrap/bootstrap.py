@@ -8,7 +8,7 @@ from system.utils import get_app_dir
 from .Migrator import MigratorManager
 
 # DBスキーマのバージョン
-CURRENT_SCHEMA_VERSION = None
+#CURRENT_SCHEMA_VERSION = None
 
 
 #### DB関係のファイルパス取得関数
@@ -71,7 +71,7 @@ def migrate_audio_conf():
     return True
 
 
-def migrate_db():
+def migrate_db(current_schema_version):
     db_path = get_db_path()
     # ファイルを格納するディレクトリがなければ作る
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -88,11 +88,11 @@ def migrate_db():
         old_conn = sqlite3.connect(db_path)
         old_version = read_schema_version(old_conn)
         old_conn.close()
-        print(f"old:{old_version} new:{CURRENT_SCHEMA_VERSION}")
-        if old_version == CURRENT_SCHEMA_VERSION:
+        print(f"old:{old_version} new:{current_schema_version}")
+        if old_version == current_schema_version:
             # バージョンが同じであれば、今あるデータベースファイルをそのまま使う
             return True
-        if old_version > CURRENT_SCHEMA_VERSION:
+        if old_version > current_schema_version:
             # ありえないのでエラー
             raise RuntimeError("DB version is newer than application")
         
@@ -114,6 +114,6 @@ def migrate_db():
     
 def bootstart(schema_version):
     CURRENT_SCHEMA_VERSION = schema_version
-    migrate_db()
+    migrate_db(schema_version)
     migrate_audio_conf()
     return True
