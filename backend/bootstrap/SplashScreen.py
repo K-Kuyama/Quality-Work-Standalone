@@ -4,7 +4,7 @@ import sys
 from system.utils import get_app_dir
 from bootstrap.bootstrap import get_bundled_resource_path
 
-def show_splash_screen(version, duration_ms=5000):
+def show_splash_screen(version, duration_ms=3000):
     """
     ロゴ画面とバージョンを画面中央に数秒間表示
     """

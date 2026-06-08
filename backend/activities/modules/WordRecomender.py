@@ -17,7 +17,7 @@ class WordRecomender:
         self.recomendations = None
         self.category = cat
         
-    def createRecomendations(self):
+    def createRecomendations(self, limitation=50):
         #選択されたイベント文字列から、キーワード候補となる文字列を抽出する。
         #イベント文字列の中で２回以上出現し、キーワード登録されていないものが候補
         token_filters = [CompoundNounFilter(),POSKeepFilter(['名詞'])]
@@ -36,9 +36,11 @@ class WordRecomender:
         imlist = sorted(words.items(), key=lambda x:x[1], reverse=True)
 #        print(f"imlist : {imlist}")
         filtered_list = self._deliminateUsedWords(imlist)
-#        print(f"filterd_list : {filtered_list}")
-        top_list = [x for x in filtered_list if x[1]>0]
-        self.recomendations =self._addEventInformation(top_list) 
+        #count数が2以上のもののみリストに残す
+        top_list = [x for x in filtered_list if x[1]>1]
+        #さらに最大個数までのリストに整形
+        eliminated_top_list = top_list[:limitation]
+        self.recomendations =self._listToDict(eliminated_top_list) 
         
     def _deliminateUsedWords(self, wlist):
         #すでにキーワードとして登録されているものを外す
@@ -48,18 +50,13 @@ class WordRecomender:
         #("ワード",出現数)を要素とするリストを返す
         return filtered_list
         
-    def _addEventInformation(self, wlist):
-        #キーワードが含まれる、イベントの情報を付加する
+    def _listToDict(self, wlist):
+        #辞書型に変換
         wd_info_list = []
         for w in wlist:
             wd_dict = dict()
-            evlist = []
-            for ev in self.category['activities']:
-                if re.search(w[0],f"{ev['app']} {ev['title']}"):
-                    evlist.append([ev['app'],ev['title']])
             wd_dict['word']=w[0]
             wd_dict['count']=w[1]
-            wd_dict['activity_list']= evlist
             wd_info_list.append(wd_dict)
         return wd_info_list
 

@@ -19,11 +19,14 @@ from activities.decolators import attach_decorator
 class KeywordCandidateView(generics.ListAPIView):
     serializer_class = KeywordCandidateSerializer
     category_id = None
+    max_num = 50
     
     def evaluate_params(self):
         params = self.request.query_params
         if 'category_id' in params:
             self.category_id = int(params.get('category_id'))
+        if 'max_num' in params:
+            self.max_num = int(params.get('max_num'))
     
     
     def get_queryset(self):
@@ -40,12 +43,9 @@ class KeywordCandidateView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):   
         self.evaluate_params()    
         queryset = self.get_queryset()
-#        print(queryset)
         cat_serializer = self.get_category_serializer(queryset)
-#        print(cat_serializer.data)
         wr = WordRecomender(cat_serializer.data)
-        wr.createRecomendations()
-#        print(f"recomendations =>{wr.recomendations}")
+        wr.createRecomendations(self.max_num)
         serializer = self.get_serializer(wr.recomendations, many=True)
         return Response(serializer.data)
         

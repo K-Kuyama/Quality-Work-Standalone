@@ -13,9 +13,12 @@ from awatch.aw_start import aw_start
 from awatch.audio_watcher_start import audio_watcher_start
 from qtserver import server_start
 from bootstrap.bootstrap import bootstart
-from bootstrap.MsixMigrator import migrate_msix_data
+#from bootstrap.MsixMigrator import migrate_msix_data
 from bootstrap.SplashScreen import show_splash_screen
 import configparser
+
+if sys.platform == "win32":
+    from bootstrap.MsixMigrator import migrate_msix_data
 
 '''
 audio_settings.jsonファイルの監視関連機能
@@ -241,7 +244,7 @@ CURRENT_VERSION = "3.6"
 CURRENT_SCHEMA_VERSION = 3
 
 #Splashウインドウの表示
-show_splash_screen(CURRENT_VERSION)
+show_splash_screen(CURRENT_VERSION, duration_ms=3000)
 
 # Windows StoreerotSからダウンロードしたVer3.5のMSIIXからの移行
 if sys.platform == "win32":
