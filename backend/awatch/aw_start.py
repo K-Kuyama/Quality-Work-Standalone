@@ -120,7 +120,7 @@ class BlankPeriod:
 
 
 
-def aw_start(stop_flag, stand_alone = False):
+def aw_start(stop_flag, stand_alone = False, port=8000):
     '''
     メインプログラム。ウインドウ情報を取得し、前回のループで取得したものと比較。
     '''
@@ -130,7 +130,7 @@ def aw_start(stop_flag, stand_alone = False):
     デフォルト値の設定。設定ファイルに定義がない場合、これが使われる。
     '''
     EV_PRODUCER_CLASS = "HttpEventProducerLocal"
-    POST_URL = "http://127.0.0.1:8000/"
+    POST_URL = f"http://127.0.0.1:{port}/"
     USER_NAME = "root"
     PASSWORD = ""
     #POST_URL = "http://127.0.0.1:8000/api/Activity/"
@@ -144,6 +144,9 @@ def aw_start(stop_flag, stand_alone = False):
 
     '''
     設定ファイルからの読み込み処理
+    
+    ローカルサーバがなく、リモートのサーバーに情報をアップロードする場合は、
+    stand_alone=trueが渡され、設定ファイルから定義が読み込まれる
     '''
 
     if stand_alone:

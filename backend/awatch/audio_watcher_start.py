@@ -120,14 +120,14 @@ class RetryCounter:
             return False
 
 
-def audio_watcher_start(stop_flag, stand_alone = False):
+def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
     # stop_flagでイベントオブジェクトが渡される。
 
     # デフォルト設定
     CONFIG_FILE = 'config.ini'
     TIME_ZONE = "UTC"
     EV_PRODUCER_CLASS ="HttpEventProducerLocal"
-    POST_URL = "http://127.0.0.1:8000/"
+    POST_URL = f"http://127.0.0.1:{port}/"
     USER_NAME = "root"
     PASSWORD = ""
     DATA_FILE_PATH = "./data/"
@@ -136,7 +136,7 @@ def audio_watcher_start(stop_flag, stand_alone = False):
     
     AUDIO_CONFIG_SOURCE = "remote"  # local または rmote
     #AUDIO_CONFIG_TARGET = "audio_conf.ini"
-    AUDIO_CONFIG_TARGET = "http://127.0.0.1:8000/api/Activity/DaemonSettings/1/"
+    AUDIO_CONFIG_TARGET = f"http://127.0.0.1:{port}/api/Activity/DaemonSettings/1/"
     
     AUDIO_FILE_PREFIX = "audio-"
 
@@ -149,6 +149,14 @@ def audio_watcher_start(stop_flag, stand_alone = False):
     Start_frame_threshold = 60
 
     Poll_time = 0.2
+
+
+    '''
+    設定ファイルからの読み込み処理
+    
+    ローカルサーバがなく、リモートのサーバーに情報をアップロードする場合は、
+    stand_alone=trueが渡され、設定ファイルから定義が読み込まれる
+    '''
 
     if stand_alone:
         config_ini = ConfigManager()

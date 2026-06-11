@@ -272,9 +272,12 @@ signal.signal(signal.SIGINT, handler)
 # 初回はマイグレーションを行う
 bootstart(CURRENT_SCHEMA_VERSION)
 
+# テスト用にポート番号を設定
+port_num = 5000
+
 # Webサーバーのスタート
 if EV_PRODUCER_CLASS == "HttpEventProducerLocal":
-    qts = threading.Thread(target=server_start, daemon=True)
+    qts = threading.Thread(target=server_start, args=(port_num,), daemon=True)
     qts.start()
     
 # ファイルチェック用デーモンのスタート
@@ -288,13 +291,13 @@ time.sleep(5)
 # スレッドにイベントオブジェクトを設定する
 logger.info("------Audio watcher start-----")
 stop_event_au = threading.Event()
-auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), daemon=True)
+auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), kwargs={"port":port_num}, daemon=True)
 auw.start()
 
 #ウインドウイベントデーモンのスタート
 logger.info("------Active window watcher start-----")
 stop_event_w = threading.Event()
-aw = threading.Thread(target=aw_start, args=(stop_event_w,), daemon=True)
+aw = threading.Thread(target=aw_start, args=(stop_event_w,), kwargs={"port":port_num}, daemon=True)
 aw.start()
 
 # トレイメニューの表示
