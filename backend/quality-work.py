@@ -15,6 +15,7 @@ from qtserver import server_start
 from bootstrap.bootstrap import bootstart
 #from bootstrap.MsixMigrator import migrate_msix_data
 from bootstrap.SplashScreen import show_splash_screen
+from bootstrap.GetServerPort import get_server_port
 import configparser
 
 if sys.platform == "win32":
@@ -145,8 +146,8 @@ def start_running():
     aw = threading.Thread(target=aw_start, args=(stop_event_w,), daemon=True)
     aw.start()
 
-def open_browser(icon, item):
-    webbrowser.open("http://localhost:8000/dashboard")
+def open_browser(icon, item, port):
+    webbrowser.open(f"http://127.0.0.1:{port}/dashboard")
 
 def toggle_action(icon, item):
     # メニューのボタンから呼ばれるアクション
@@ -197,7 +198,7 @@ def get_tinted_icon(path, color="#555555"):
     new_image.putalpha(alpha)
     return new_image
 
-def run_menu():
+def run_menu(port=9416):
 
     # 1. 画像を読み込む
     image_file = get_icon_file()
@@ -217,7 +218,8 @@ def run_menu():
             toggle_action
         ),
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("ダッシュボードを開く", open_browser, default=True),
+        #pystray.MenuItem("ダッシュボードを開く", open_browser, default=True),
+        pystray.MenuItem("ダッシュボードを開く", lambda icon, item: open_browser(icon, item, port), default=True),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("終了", stop_all)
         #pystray.MenuItem("終了", lambda icon, item: icon.stop())
@@ -235,71 +237,76 @@ def run_menu():
 '''
 ここからメインプログラム
 '''
+if __name__ == "__main__":
 
-
-CONFIG_FILE = 'config.ini'
-EV_PRODUCER_CLASS = "HttpEventProducerLocal"
-
-CURRENT_VERSION = "3.6"
-CURRENT_SCHEMA_VERSION = 3
-
-#Splashウインドウの表示
-show_splash_screen(CURRENT_VERSION, duration_ms=3000)
-
-# Windows StoreerotSからダウンロードしたVer3.5のMSIIXからの移行
-if sys.platform == "win32":
-    migrate_msix_data()
-
-#ロガーを取得する
-logger = setup_logger()
-
-logger.info("------Quality-Work start-----")
-if os.path.exists(CONFIG_FILE):
-    config_ini = configparser.ConfigParser()
-    config_ini.read(CONFIG_FILE, encoding='utf-8')
-    try:
-        EV_PRODUCER_CLASS = config_ini.get('DEFAULT','Ev_producer_class')
-    except (configparser.NoSectionError,configparser.NoOptionError):
-        logger.warning("EventProducer not defined")          
-
-
-# ローカルで動くdjangoアプリケーションが設定ファイルを変更した際に
-# 送ってくるシグナルを受け取る
-signal.signal(signal.SIGINT, handler)
-#signal.signal(signal.SIGTERM, term_handler)
-
-# データベースファイルのチェック
-# 初回はマイグレーションを行う
-bootstart(CURRENT_SCHEMA_VERSION)
-
-# テスト用にポート番号を設定
-port_num = 5000
-
-# Webサーバーのスタート
-if EV_PRODUCER_CLASS == "HttpEventProducerLocal":
-    qts = threading.Thread(target=server_start, args=(port_num,), daemon=True)
-    qts.start()
+    import multiprocessing
     
-# ファイルチェック用デーモンのスタート
-fc = threading.Thread(target=check_file, args=(term_handler,), daemon=True)
-fc.start()
+    # Windows/PyInstaller環境での無限起動を防ぐ必須の1行
+    multiprocessing.freeze_support()
 
-#　Web Serverが立ち上がるのを待つため、5秒スリープ
-time.sleep(5)
+    CONFIG_FILE = 'config.ini'
+    EV_PRODUCER_CLASS = "HttpEventProducerLocal"
 
-# オーディオデーモンのスタート
-# スレッドにイベントオブジェクトを設定する
-logger.info("------Audio watcher start-----")
-stop_event_au = threading.Event()
-auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), kwargs={"port":port_num}, daemon=True)
-auw.start()
+    CURRENT_VERSION = "3.6"
+    CURRENT_SCHEMA_VERSION = 3
 
-#ウインドウイベントデーモンのスタート
-logger.info("------Active window watcher start-----")
-stop_event_w = threading.Event()
-aw = threading.Thread(target=aw_start, args=(stop_event_w,), kwargs={"port":port_num}, daemon=True)
-aw.start()
+    #Splashウインドウの表示
+    show_splash_screen(CURRENT_VERSION, duration_ms=3000)
+    
+    # Windows StoreerotSからダウンロードしたVer3.5のMSIIXからの移行
+    if sys.platform == "win32":
+        migrate_msix_data()
 
-# トレイメニューの表示
-run_menu()
+    #ロガーを取得する
+    logger = setup_logger()
+
+    logger.info("------Quality-Work start-----")
+    if os.path.exists(CONFIG_FILE):
+        config_ini = configparser.ConfigParser()
+        config_ini.read(CONFIG_FILE, encoding='utf-8')
+        try:
+            EV_PRODUCER_CLASS = config_ini.get('DEFAULT','Ev_producer_class')
+        except (configparser.NoSectionError,configparser.NoOptionError):
+            logger.warning("EventProducer not defined")          
+
+
+    # ローカルで動くdjangoアプリケーションが設定ファイルを変更した際に
+    # 送ってくるシグナルを受け取る
+    signal.signal(signal.SIGINT, handler)
+    #signal.signal(signal.SIGTERM, term_handler)
+
+    # データベースファイルのチェック
+    # 初回はマイグレーションを行う
+    bootstart(CURRENT_SCHEMA_VERSION)
+
+    # ポート番号を取得
+    port_num = get_server_port()
+
+    # Webサーバーのスタート
+    if EV_PRODUCER_CLASS == "HttpEventProducerLocal":
+        qts = threading.Thread(target=server_start, args=(port_num,), daemon=True)
+        qts.start()
+        
+    # ファイルチェック用デーモンのスタート
+    fc = threading.Thread(target=check_file, args=(term_handler,), daemon=True)
+    fc.start()
+
+    #　Web Serverが立ち上がるのを待つため、5秒スリープ
+    time.sleep(5)
+
+    # オーディオデーモンのスタート
+    # スレッドにイベントオブジェクトを設定する
+    logger.info("------Audio watcher start-----")
+    stop_event_au = threading.Event()
+    auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), kwargs={"port":port_num}, daemon=True)
+    auw.start()
+
+    #ウインドウイベントデーモンのスタート
+    logger.info("------Active window watcher start-----")
+    stop_event_w = threading.Event()
+    aw = threading.Thread(target=aw_start, args=(stop_event_w,), kwargs={"port":port_num}, daemon=True)
+    aw.start()
+
+    # トレイメニューの表示
+    run_menu(port_num)
 
