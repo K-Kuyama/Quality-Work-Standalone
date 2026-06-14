@@ -74,7 +74,7 @@ def _ask_new_port_worker(current_port, return_dict):
 
     # ユーザーに入力を促す（デフォルト値として現在のポート+1などを提案しても良い）
     new_port = simpledialog.askinteger(
-        "ポート競合",
+        "Quality-Work : ポート競合",
         f"ポート {current_port} 番は既に他のアプリケーションで使用されています。\n\n使用する新しいポート番号（1024-65535）を入力してください:",
         initialvalue=current_port + 1,
         minvalue=1024,
