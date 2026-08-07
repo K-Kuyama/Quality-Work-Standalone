@@ -1,6 +1,9 @@
 import ctypes
+import logging
 from ctypes import *
 from ctypes.util import find_library
+
+logger = logging.getLogger(f"QualityWork.{__name__}")
 
 #from audio_tap_for_mac import get_peak_level_percent as _get_tap_peak_level_percent
 
@@ -153,7 +156,6 @@ class AudioStatus_Mac:
     # 音声デバイスの状態と音声出力の状態の両方をチェックする。両方Trueの場合にTrueを返す
     def is_active(self):
         device_active = self.is_device_active()
-        print(f"    device: {device_active}")
         if not device_active or _ProcessTapMonitor is None:
             print(f"    fallback! {_ProcessTapMonitor}")
             # デバイスが不使用、またはProcess Tapが使えない環境では従来通りの粗い判定にフォールバック
@@ -163,7 +165,6 @@ class AudioStatus_Mac:
                 level_active = self.get_peak_level() > self.threshold
             except Exception:
                 level_active = device_active
-        print(f"    level: {level_active}")
 
         # 一定回数静音が続いたらProcessTapMonitorを初期化
         if level_active:
@@ -185,13 +186,12 @@ class AudioStatus_Mac:
 
             mic = is_device_running(indev, kAudioObjectPropertyScopeInput)
             spk = is_device_running(outdev, kAudioObjectPropertyScopeOutput)
-            #print(f"mic_active={mic}, speaker_active={spk}")
             if mic or spk:
                 return True
             else:
                 return False
         except Exception as e:
-            print("Error:", e)
+            logger.warning("Error:", e)
 
 
     # ProcessTapMonitorの初期化
@@ -215,6 +215,5 @@ class AudioStatus_Mac:
             level = self._tap_monitor.get_peak_level_percent()
         except Exception:
             self._close_tap_monitor()
-        print(f"    LEVEL: {level}")
         return level
 

@@ -1,5 +1,8 @@
 import ctypes
+import logging
 from ctypes import POINTER
+
+logger = logging.getLogger(f"QualityWork.{__name__}")
 
 # 以下をインストールしておく
 #  comtypes : WASAPI の COM インターフェイス
@@ -130,7 +133,7 @@ class AudioStatus_Win:
         デバイスがアクティブ、かつ音声出力レベルがスレッショルドを超えていればTrueを返す
         """             
         device_active = self.is_audio_active()
-        print(f"    device: {device_active}")
+        #print(f"    device: {device_active}")
         try:
             level = get_output_level()  # 0.0 - 1.0
             #print(f"    level_value: {level}")   
@@ -154,4 +157,4 @@ class AudioStatus_Win:
             else:
                 return False
         except Exception as e:
-            print("Error:", e)
+            logger.warning("Error:", e)

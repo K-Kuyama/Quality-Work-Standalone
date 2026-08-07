@@ -247,7 +247,6 @@ class ProcessTapMonitor:
     """
 
     def __init__(self):
-        print(f"ProcessTapMonitor initializing")
         self._lock = threading.Lock()
         self._peak = 0.0
         self._tap_id = AudioObjectID(0)
@@ -258,7 +257,6 @@ class ProcessTapMonitor:
         self._setup()
 
     def _setup(self):
-        print(f"Setting up ProcessTapMonitor")
         tap_uuid = NSUUID.UUID()
         tap_description = CATapDescription.alloc().initStereoGlobalTapButExcludeProcesses_([])
         tap_description.setName_("QualityWork-AudioLevelTap")
@@ -266,7 +264,6 @@ class ProcessTapMonitor:
         tap_description.setPrivate_(True)
         tap_description.setMuteBehavior_(0)  # CATapUnmuted: ミュートされていない実際のサンプルを取得
 
-        print(f"   Setting up Hardware")
         tap_ptr = c_void_p(objc.pyobjc_id(tap_description))
         tap_id = AudioObjectID(0)
         status = _coreaudio.AudioHardwareCreateProcessTap(tap_ptr, byref(tap_id))
@@ -274,7 +271,6 @@ class ProcessTapMonitor:
             raise RuntimeError(f"AudioHardwareCreateProcessTap failed: {status}")
         self._tap_id = tap_id
 
-        print(f"   Getting device")
         try:
             output_uid = _get_default_output_device_uid()
             agg_uuid_str = str(uuid.uuid4())
