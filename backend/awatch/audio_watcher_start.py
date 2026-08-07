@@ -86,13 +86,13 @@ class AudioActivityRecorder:
 
     def commit_start(self):
         self.active = True
-        logger.debug(f"start : {self.start_time}")
-        logger.debug(f"  {self.window['app']} : {self.window['title']}")
+        #logger.debug(f"start : {self.start_time}")
+        logger.debug(f"audio_start  {self.start_time},{self.window['app']} : {self.window['title']}")
 
     def end(self):
         # 音声レベルが(継続していた状態から)しきい値を下回った瞬間に呼ばれる。
         self.end_time = datetime.now(ZoneInfo(self.time_zone))
-        logger.debug(f"end : {self.end_time}")
+        #logger.debug(f"end : {self.end_time}")
 
     def cancel_start(self):
         self.window = None
@@ -103,7 +103,7 @@ class AudioActivityRecorder:
         self.end_time = None
 
     def commit_end(self):
-        logger.debug(f"end confirmed : {self.end_time}")
+        logger.debug(f"audio_end : {self.end_time}")
         self.active = False
         self.start_time = None
         self.end_time = None
