@@ -157,7 +157,6 @@ class AudioStatus_Mac:
     def is_active(self):
         device_active = self.is_device_active()
         if not device_active or _ProcessTapMonitor is None:
-            print(f"    fallback! {_ProcessTapMonitor}")
             # デバイスが不使用、またはProcess Tapが使えない環境では従来通りの粗い判定にフォールバック
             level_active = device_active
         else:
