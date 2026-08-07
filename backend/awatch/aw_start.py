@@ -110,6 +110,7 @@ class ActionRecorder:
 # def on_release(key):
 #    print('{0} release'.format(
 #        key))
+BLANK_THRESHOLD = 180   #この秒数を超えると、作業をしていないと判定
 
 class BlankPeriod:
     
@@ -117,7 +118,13 @@ class BlankPeriod:
 #        self.start_time = datetime.now(timezone.utc)
         self.start_time = datetime.now(ZoneInfo(timezone))
         self.comitted = False
+        self.counter = 0
+        self.excessed = False   #BLANK_THREASHOLDを超えた場合にTrue。comittedとは別に管理
 
+    def increment(self):
+        self.counter += 1
+        if self.counter >= BLANK_THRESHOLD:
+            self.excessed = True
 
 
 def aw_start(stop_flag, stand_alone = False, port=8000):
@@ -211,7 +218,7 @@ def aw_start(stop_flag, stand_alone = False, port=8000):
  
 
                 
-    last_window = None
+    
     counter = 0
 #assumed_start_time = None
     bp = None
@@ -240,7 +247,18 @@ def aw_start(stop_flag, stand_alone = False, port=8000):
     #signal.signal(signal.SIGINT, handler)
 
     window = None
+    last_window = None
+    ar = ActionRecorder(TIME_ZONE)
+    ar.start()
+
+
+
+    '''
+    イベントループ
+    '''
+
     while not stop_flag.is_set(): #stop_flagイベントがセットされるとループから抜ける
+        time_in_this_loop = datetime.now(ZoneInfo(TIME_ZONE))
         #        print(counter)
         try:
             window = get_window_info()
@@ -248,51 +266,60 @@ def aw_start(stop_flag, stand_alone = False, port=8000):
         except Exception as e:
             logger.warning(e)
             pass
-        if not last_window :
-            last_window = window
-            ar = ActionRecorder(TIME_ZONE)
-            ar.start()
-        else :
-            if not last_window == window:
-                if last_window['app'] == window['app'] and window['title'] == "":
-#                    print("No title event")
-                    continue
-                else :
-                    if bp and bp.comitted:
-                        ep.createBlankEvent(bp)
-                        #print("Brank period end due to the window change.")
-                    else :
-                        ep.createEvent(ar, last_window, None)
-                        #print(f"event : {last_window['app']}")
-                    bp = None
-                    #print("bp deleted due to window change.")
-                    counter = 0
-                    ar.reset()
-                    last_window = window
 
+        if window  and (window['title'] == "" or window['title'] == None):    #スクリーンロックの場合
+            logger.debug(f"no title")
+            if not bp:
+                if last_window:
+                    ep.createEvent(ar, last_window,  time_in_this_loop)
+                    ar.reset()
+            elif bp and not bp.comitted:
+                if last_window:
+                    ep.createEvent(ar, last_window, bp.start_time)
+                ar.reset()
+                bp.comitted = True
+            if not bp :
+                bp = BlankPeriod(TIME_ZONE)
+            bp.increment()
+            last_window = None  #スクリーンロックの場合、last_windowをNoneにしておく
+     
+        elif not last_window == window: #前のループとウインドウの状態が変わった場合
+            if last_window == None: 
+                # 最初の１回および、スクリーンロック明けでここに来るはず。取得したWindow情報をセット
+                ar.reset()
+                last_window = window
             else :
-                if ar.getInputFlag() :
-                    ar.resetInputFlag()
-                    counter = 0
-                    if bp :
-                        if bp.comitted :
-                            ep.createBlankEvent(bp)
-                            bp = None
-                            #print("bp deleted due to send event by inputs.")
-                            counter = 0
-                            ar.reset()
-                    bp = None
-                    #print("bp deleted due to input")
+                if bp and bp.comitted:
+                    ep.createBlankEvent(bp)
                 else :
-                    if not bp :
-                        bp = BlankPeriod(TIME_ZONE)
-                        #print(f"BP start at {bp.start_time}")
-                    counter += 1
-                    if counter >= 180 and not bp.comitted:
-                        ep.createEvent(ar, last_window, bp.start_time)
-                        #print(f"event befor blank period : {last_window['app']}")
+                    if last_window:
+                        ep.createEvent(ar, last_window, time_in_this_loop)
+                bp = None
+                ar.reset()
+                last_window = window
+
+        else :                  #前のループとウインドウの状態が変わっていない場合
+            if ar.getInputFlag() :
+                ar.resetInputFlag()
+                counter = 0
+                if bp :
+                    if bp.comitted :
+                        ep.createBlankEvent(bp)
+                        bp = None
                         ar.reset()
-                        bp.comitted = True
+                bp = None
+                #print("bp deleted due to input")
+            else :
+                if not bp :
+                    bp = BlankPeriod(TIME_ZONE)
+                    #print(f"BP start at {bp.start_time}")
+                bp.increment()
+                if bp.excessed and not bp.comitted:
+                    if last_window:
+                        ep.createEvent(ar, last_window, bp.start_time)
+                    #print(f"event befor blank period : {last_window['app']}")
+                    ar.reset()
+                    bp.comitted = True
 
         time.sleep(poll_time) 
         
@@ -305,10 +332,10 @@ def aw_start(stop_flag, stand_alone = False, port=8000):
             prev_loop_time = current_loop_time
             current_loop_time = time.time()
         if (current_loop_time - prev_loop_time) >=60:
-            #print(f"prev:{prev_loop_time}, current:{current_loop_time}")
-            #print("create blank period by System sleep....")
+            logger.debug(f"prev:{prev_loop_time}, current:{current_loop_time}")
+            logger.debug("create blank period by System sleep....")
             bp_st = datetime.fromtimestamp(prev_loop_time, tz=ZoneInfo(TIME_ZONE))
-            #print(f"compaire ar - bp : {ar.start_time} - {bp_st}")
+            logger.debug(f"compaire ar - bp : {ar.start_time} - {bp_st}")
             if ar.start_time < bp_st :
                 if bp:
                     #blankperiod は存在するが、System Sleep 後に作られたものである場合、Sleep前からのBlankperiodを作り直す
@@ -318,14 +345,16 @@ def aw_start(stop_flag, stand_alone = False, port=8000):
                 else:
                     bp =BlankPeriod(TIME_ZONE)
                     bp.start_time=bp_st
-                #print(f"ar.start_time = {ar.start_time}, bp.start_time = {bp.start_time}")
+                logger.debug(f"ar.start_time = {ar.start_time}, bp.start_time = {bp.start_time}")
                 if(ar.start_time < bp.start_time):
-                    ep.createEvent(ar, last_window, bp.start_time)
+                    if last_window:
+                        ep.createEvent(ar, last_window, bp.start_time)
             #ep.createBlankEvent(bp)
             #print("Brank period end due to system sleep.")
             bp = None
             counter = 0
             ar.reset()
+            last_window = None
 
     # 終了処理
     stop_flag.clear()  #イベントにセットされている値をクリアする

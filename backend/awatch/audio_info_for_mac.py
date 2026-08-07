@@ -2,6 +2,17 @@ import ctypes
 from ctypes import *
 from ctypes.util import find_library
 
+#from audio_tap_for_mac import get_peak_level_percent as _get_tap_peak_level_percent
+
+# Core Audio Process Tap（macOS 14.2+）で実際の出力音声レベルを取得するモジュール。
+# 古いmacOSや権限が無い環境ではimport自体が失敗しうるので、その場合は粗い判定にフォールバックする。
+
+try:
+    from .audio_tap_for_mac import ProcessTapMonitor as _ProcessTapMonitor
+except Exception:
+    _ProcessTapMonitor = None
+
+
 # ctypes は Python のための外部関数ライブラリです。このライブラリは C と互換性のあるデータ型を提供し、
 # 動的リンク/共有ライブラリ内の関数呼び出しを可能にします。動的リンク/共有ライブラリを純粋な
 # Python でラップするために使うことができます。
@@ -114,6 +125,7 @@ def is_device_running(device_id, scope):
         return False
     return bool(value.value)
 
+'''
 def is_audio_active_for_mac():
     try:
         indev = get_default_input_device()
@@ -128,3 +140,81 @@ def is_audio_active_for_mac():
             return False
     except Exception as e:
         print("Error:", e)
+'''
+
+
+class AudioStatus_Mac:
+    def __init__(self, silence_threshold, max_silent_polls):
+        self.threshold = silence_threshold
+        self.max_silent_polls = max_silent_polls
+        self._tap_monitor = None
+        self._silent_streak = 0
+
+    # 音声デバイスの状態と音声出力の状態の両方をチェックする。両方Trueの場合にTrueを返す
+    def is_active(self):
+        device_active = self.is_device_active()
+        print(f"    device: {device_active}")
+        if not device_active or _ProcessTapMonitor is None:
+            print(f"    fallback! {_ProcessTapMonitor}")
+            # デバイスが不使用、またはProcess Tapが使えない環境では従来通りの粗い判定にフォールバック
+            level_active = device_active
+        else:
+            try:
+                level_active = self.get_peak_level() > self.threshold
+            except Exception:
+                level_active = device_active
+        print(f"    level: {level_active}")
+
+        # 一定回数静音が続いたらProcessTapMonitorを初期化
+        if level_active:
+            self._silent_streak = 0
+        else:
+            self._silent_streak += 1
+            if self._silent_streak >= self.max_silent_polls:
+                self._close_tap_monitor()
+                self._silent_streak = 0
+
+        # デバイスがアクティブでかつ音声レベルが一定以上の場合にTrueを返す
+        return device_active and level_active
+
+    # 音声デバイスの状態をチェック。デバイスが使用されていたらTrueを返す
+    def is_device_active(self):
+        try:
+            indev = get_default_input_device()
+            outdev = get_default_output_device()
+
+            mic = is_device_running(indev, kAudioObjectPropertyScopeInput)
+            spk = is_device_running(outdev, kAudioObjectPropertyScopeOutput)
+            #print(f"mic_active={mic}, speaker_active={spk}")
+            if mic or spk:
+                return True
+            else:
+                return False
+        except Exception as e:
+            print("Error:", e)
+
+
+    # ProcessTapMonitorの初期化
+    def _close_tap_monitor(self):
+        if self._tap_monitor is not None:
+            try:
+                self._tap_monitor.close()
+            except Exception:
+                pass
+            self._tap_monitor = None
+
+    #ProcessTapMonitorのインスタンスを生成して、音声レベルを取得し値を返す
+    def get_peak_level(self):
+        level = 0
+        if self._tap_monitor is None:
+            try:
+                self._tap_monitor = _ProcessTapMonitor()
+            except Exception:
+                self._tap_monitor = None
+        try:
+            level = self._tap_monitor.get_peak_level_percent()
+        except Exception:
+            self._close_tap_monitor()
+        print(f"    LEVEL: {level}")
+        return level
+

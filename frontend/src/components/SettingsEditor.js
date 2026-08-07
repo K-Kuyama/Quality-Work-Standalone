@@ -10,8 +10,8 @@ function SettingsEditor(props){
     const [requestBody, setRequestBody] = useState({});
     const [haveData, setHaveData] = useState(false); 
     const [redraw, setRedraw] = useState(false)
-
-    const valid_items = ["Poll_time", "Start_frame_threshold", "RETRY_INTERVAL"]
+    /* 設定ファイルのうち、GUIに表示する項目をvalid_itemsに設定*/
+    const valid_items = ["Poll_time", "Start_frame_threshold", "RETRY_INTERVAL", "Silence_threshold", "End_frame_threshold"]
 
     const reset = () =>{
         setItems([]);

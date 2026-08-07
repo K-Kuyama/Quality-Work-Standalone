@@ -18,6 +18,10 @@ from urllib3.exceptions import ProtocolError
 
 logger = logging.getLogger(f"QualityWork.{__name__}")
 
+# (connect timeout, read timeout) 秒。
+# 応答が遅延してもポーリングループを無期限に止めないための上限。
+REQUEST_TIMEOUT = (5, 15)
+
 class EventProducer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def createEvent(self, ar, last_window, end_time):
@@ -54,7 +58,11 @@ class HttpEventProducer(EventProducer):
         self.session = requests.Session()
         # csrfトークンを取得する
         try:
-            response = requests.get(self.post_url+"account/csrf/")
+            response = requests.get(self.post_url+"account/csrf/", timeout=REQUEST_TIMEOUT)
+        except requests.exceptions.Timeout as e:
+            logger.error("*Timeout*")
+            logger.error(e)
+            return False
         except requests.exceptions.ConnectionError as e:
             logger.error("*ConnectionError*")
             logger.error(e)
@@ -69,7 +77,11 @@ class HttpEventProducer(EventProducer):
         headers = {"X-CSRFToken": self.csrf, "Referer":self.post_url,}
         cookies = {"csrftoken": self.csrf_cookie}
         try:
-            response = self.session.post(self.post_url+"account/api-login/", headers=headers, cookies=cookies, json=request_body)
+            response = self.session.post(self.post_url+"account/api-login/", headers=headers, cookies=cookies, json=request_body, timeout=REQUEST_TIMEOUT)
+        except requests.exceptions.Timeout as e:
+            logger.error("*Timeout*")
+            logger.error(e)
+            return False
         except requests.exceptions.ConnectionError as e:
             logger.error("*ConnectionError*")
             logger.error(e)
@@ -82,7 +94,7 @@ class HttpEventProducer(EventProducer):
     def close(self):
         if self.multi:
             headers = {"X-CSRFToken": self.csrf_cookie, "Referer":self.post_url,}
-            self.session.post(self.post_url+"account/api-logout/",headers=headers)
+            self.session.post(self.post_url+"account/api-logout/",headers=headers, timeout=REQUEST_TIMEOUT)
         #self.session.post(self.post_url+"api-logout/",headers=headers)
         
 
@@ -98,6 +110,7 @@ class HttpEventProducer(EventProducer):
         else :
             duration = datetime.now(ZoneInfo(self.time_zone)) - start_time
         event_data['window'] = last_window
+        print(f"create event : {event_data['window']['title']}")
         # titleフィールドに入れる文字列長さは0<n<256でなければならない
         title_str = event_data['window']['title']
         if(len(title_str) > 0 ):
@@ -171,7 +184,7 @@ class HttpEventProducer(EventProducer):
                 logger.info(self.post_url+local_path+"bulk/")
                 logger.info(self.request_pool)
                 response = self.session.post(self.post_url+local_path+"bulk/",
-                                            headers=headers, json=self.request_pool, allow_redirects=False)
+                                            headers=headers, json=self.request_pool, allow_redirects=False, timeout=REQUEST_TIMEOUT)
                 response.raise_for_status()
                 if response.status_code == HTTPStatus.FOUND:
                    if self.multi:
@@ -179,6 +192,9 @@ class HttpEventProducer(EventProducer):
                 else:
                     logger.info(f"{response} : {self.request_pool}")
                     self.request_pool =[]
+            except requests.exceptions.Timeout as e:
+                logger.error("Timeout")
+                logger.error(e)
             except requests.exceptions.ConnectionError:
                 logger.error("ConnectinError")
             except requests.exceptions.HTTPError as e:
@@ -190,11 +206,15 @@ class HttpEventProducer(EventProducer):
         else:
             try:
                 response = self.session.post(self.post_url+local_path,
-                                            headers=headers, json=request_body, allow_redirects=False)
+                                            headers=headers, json=request_body, allow_redirects=False, timeout=REQUEST_TIMEOUT)
                 response.raise_for_status()
                 if response.status_code == HTTPStatus.FOUND:
                     self.hasSession = False
                     self.request_pool.append(request_body)
+            except requests.exceptions.Timeout as e:
+                logger.error(f"Timeout {e}")
+                self.hasSession = False
+                self.request_pool.append(request_body)
             except requests.exceptions.ConnectionError as e:
                 print(f"ConnectinError {e}")
                 self.hasSession = False

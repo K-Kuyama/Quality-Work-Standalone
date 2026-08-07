@@ -4,7 +4,7 @@ import logging
 
 from datetime import timedelta, datetime, timezone
 from zoneinfo import ZoneInfo
-from .AudioInfo import is_audio_active
+from .AudioInfo import create_audio_status
 from .WindowInfo import get_window_info
 from .RemoteSettings import RemoteSettings
 
@@ -15,12 +15,19 @@ from awatch.ConfigManager import ConfigManager
 
 logger = logging.getLogger(f"QualityWork.{__name__}")
 
-# Audio Settings Class
-class AudioSettings:
 
+class AudioSettings:
+    '''
+    オーディオ設定を読み込み、保持するクラス
+        ローカルファイルから読み込む場合：  get_settings_from_local
+        ローカルサーバーから読み込む場合（インタフェース画面から設定する場合）：    get_settings_from_remote
+    '''
     def __init__(self):
         self.Start_frame_threshold = 10
+        self.Silence_threshold = 10
+        self.End_frame_threshold = 50
 
+    # ローカルファイルから読み込む
     def get_settings_from_local(self):
         config_ini = ConfigManager()
         logger.info(f"get_settings_from_local: {config_ini}")
@@ -29,20 +36,28 @@ class AudioSettings:
             pass
         else:
 
-            try:  
+            try:
                 self.Start_frame_threshold = int(config_ini.get('Audio','Start_frame_threshold'))
             except (configparser.NoSectionError,configparser.NoOptionError):
                 logger.warning("Start_frame_threshold not defined")
-            try:  
+            try:
                 self.Poll_time = float(config_ini.get('Audio','Poll_time'))
             except (configparser.NoSectionError,configparser.NoOptionError):
                 logger.warning("Poll_time not defined")
+            try:
+                self.Silence_threshold = int(config_ini.get('Audio','Silence_threshold'))
+            except (configparser.NoSectionError,configparser.NoOptionError):
+                logger.warning("Silence_threshold not defined")
+            try:
+                self.End_frame_threshold = int(config_ini.get('Audio','End_frame_threshold'))
+            except (configparser.NoSectionError,configparser.NoOptionError):
+                logger.warning("End_frame_threshold not defined")
             try:
                 self.RETRY_INTERVAL = int(config_ini.get('Audio','RETRY_INTERVAL'))
             except (configparser.NoSectionError,configparser.NoOptionError):
                 logger.warning("RETRY_INTERVAL not defined")      
 
-
+    # ローカルサーバーから読み込む
     def get_settings_from_remote(self, target_url, post_url, user_name, password, multi):
         logger.info(f"get_settings_from_remote: {target_url}")
         rm = RemoteSettings(post_url, user_name, password, multi)
@@ -51,8 +66,11 @@ class AudioSettings:
             setattr(self, item[0], item[1])
 
 
-# Audio_activity_recorder
 class AudioActivityRecorder:
+    '''
+    音声アクティビティーを記録するクラス
+    スタートした時間、終了した時間、スタート時点でアクティブだったウインドウ情報を記録する
+    '''
 
     def __init__(self, timezone):
         self.start_time = None
@@ -70,20 +88,22 @@ class AudioActivityRecorder:
         self.active = True
         logger.debug(f"start : {self.start_time}")
         logger.debug(f"  {self.window['app']} : {self.window['title']}")
-    
+
     def end(self):
-        logger.debug(f"end")
+        # 音声レベルが(継続していた状態から)しきい値を下回った瞬間に呼ばれる。
         self.end_time = datetime.now(ZoneInfo(self.time_zone))
+        logger.debug(f"end : {self.end_time}")
 
     def cancel_start(self):
         self.window = None
         self.start_time = None
 
     def cancel_end(self):
+        # 終了確定待ち(recording_state==3)の間にレベルが回復した場合、候補を破棄して継続中として扱う
         self.end_time = None
 
     def commit_end(self):
-        logger.debug(f"end : {self.end_time}")
+        logger.debug(f"end confirmed : {self.end_time}")
         self.active = False
         self.start_time = None
         self.end_time = None
@@ -123,7 +143,12 @@ class RetryCounter:
 def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
     # stop_flagでイベントオブジェクトが渡される。
 
-    # デフォルト設定
+    '''
+    サーバーとの通信設定（デフォルト）
+
+    ローカルサーバーと通信する場合は、stand_alone=Falseが渡され,
+    この設定が使われる
+    '''
     CONFIG_FILE = 'config.ini'
     TIME_ZONE = "UTC"
     EV_PRODUCER_CLASS ="HttpEventProducerLocal"
@@ -141,18 +166,15 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
     AUDIO_FILE_PREFIX = "audio-"
 
     # デフォルト　オーディオ設定
-
-
     # silent_threshold以上の音声のレベルをStart_frame_threshold回連続で
     # 検知したらストリームが開始したと判定。
 
-    Start_frame_threshold = 60
-
-    Poll_time = 0.2
+    # Start_frame_threshold = 60
+    # Poll_time = 0.2
 
 
     '''
-    設定ファイルからの読み込み処理
+    サーバーとの通信設定のファイルからの読み込み処理
     
     ローカルサーバがなく、リモートのサーバーに情報をアップロードする場合は、
     stand_alone=trueが渡され、設定ファイルから定義が読み込まれる
@@ -212,7 +234,9 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
         except (configparser.NoSectionError,configparser.NoOptionError):
             logger.warning("AUDIO_FILE_PREFIX not defined")
         
- 
+    '''
+    オーディオに関する設定の読み込み処理
+    '''
     aus = AudioSettings()
     if AUDIO_CONFIG_SOURCE=='remote':
         aus.get_settings_from_remote(AUDIO_CONFIG_TARGET, POST_URL, USER_NAME, PASSWORD, False)
@@ -234,26 +258,42 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
 
     start_time = None
     end_time = None
-    Poll_time =aus.Poll_time
+    # Poll_time =aus.Poll_time
 
+    '''
+    Audio情報の出力先を設定する
+        サーバーに出力：    HttpEventProduer
+        ファイルに出力：    FileEventProducer
+    '''
     ep = None
     if EV_PRODUCER_CLASS == "FileEventProducer":
         ep = FileEventProducer(DATA_FILE_PATH, ENCODING, FILE_ROTATE, TIME_ZONE, prefix=AUDIO_FILE_PREFIX)
     elif EV_PRODUCER_CLASS == "HttpEventProducer":
         ep = HttpEventProducer(POST_URL, TIME_ZONE, USER_NAME, PASSWORD, True)
-    else:
+    else:   # HttpEventProducerLocalの場合（ローカルサーバーの場合）にこれが呼ばれる
         ep = HttpEventProducer(POST_URL, TIME_ZONE, USER_NAME, PASSWORD, False)
 
+    # オーディオ情報を記録するオブジェクトを生成
     ar = AudioActivityRecorder(TIME_ZONE)
-
+    # 情報送信失敗の際に使うリトライカウンターオブジェクトを生成
     rc = RetryCounter(aus.RETRY_INTERVAL)
 
+    # オーディオの状態を保持するオブジェクトを生成
+    audio_status = create_audio_status(aus.Silence_threshold, aus.End_frame_threshold)
+
     try:
-        while not stop_flag.is_set(): #stop_flagイベントがセットされるとループから抜ける
-            time.sleep(Poll_time)
+        while not stop_flag.is_set(): #stop_flagイベントが親スレッドからセットされるとループから抜ける
+            time.sleep(aus.Poll_time)
+
+            # active: マイクまたはスピーカーが実際に無音でない状態で使用中かどうか
+            #           使用中: True    不使用: False
+            active = audio_status.is_active()
+
+            # recording_state : 
+            #       0:無音状態  1:有音状態（未確定）  2:有音状態  3:無音状態（未確定）
 
             if recording_state == 0:
-                if is_audio_active():
+                if active:
                     ar.start()
                     recording_state = 1
                     active_frames += 1
@@ -268,7 +308,7 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
                             rc.reset()
                 continue
             if recording_state == 1:
-                if is_audio_active():
+                if active:
                     if(active_frames > aus.Start_frame_threshold):
                         ar.commit_start()
                         recording_state = 2
@@ -281,20 +321,26 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
                     active_frames = 0
                 continue
             if recording_state == 2:
-                if not is_audio_active():
+                # (継続していた状態から)非アクティブになった瞬間にend_timeを記録し、
+                # 終了確定待ち(state 3)に遷移する
+                if not active:
                     ar.end()
                     recording_state = 3
-                    active_frames += 1
+                    active_frames = 1
                 continue
             if recording_state == 3:
-                if not is_audio_active(): 
-                    ep.createAudioActivityEvent(ar.window, ar.start_time, ar.end_time)
-                    if len(ep.request_pool) > 0:
-                        rc.start()
-                    ar.commit_end()
-                    active_frames = 0
-                    recording_state = 0
+                if not active:
+                    active_frames += 1
+                    if active_frames >= aus.End_frame_threshold:
+                        # End_frame_threshold回連続で非アクティブを確認できたのでイベントを確定・送信する
+                        ep.createAudioActivityEvent(ar.window, ar.start_time, ar.end_time)
+                        if len(ep.request_pool) > 0:
+                            rc.start()
+                        ar.commit_end()
+                        active_frames = 0
+                        recording_state = 0
                 else:
+                    # 確定前にアクティブに戻ったので、終了候補を破棄して録音継続として扱う
                     ar.cancel_end()
                     recording_state  = 2
                     active_frames = 0
@@ -305,6 +351,8 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
     except KeyboardInterrupt:
         logger.info("\n🎵 stop listning.")
 
-    
+    # オーディオの状態を保持するオブジェクトを後始末（これを行わないとスレッドが終了しない可能性がある）
+    audio_status.close()
+
     # 終了処理
     stop_flag.clear()  #イベントにセットされている値をクリアする
