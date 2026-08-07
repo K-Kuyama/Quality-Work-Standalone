@@ -250,6 +250,7 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
     # 音の変化を監視
     #silence_threshold = 100  # 無音と判断するしきい値
     active_frames = 0        # 音が継続しているフレーム数
+    silence_frames = 0       # recording_state==1で連続して無音だったフレーム数
     #frame_threshold = 5     # 連続10フレーム音が続いたら動画が再生中と判断
     recording_state = 0     # 初期状態:0、スタート判定中:1、レコード中:2、終了判定中:3
     recordig_flag = False
@@ -309,6 +310,7 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
                 continue
             if recording_state == 1:
                 if active:
+                    silence_frames = 0  # 音声を検知したので無音カウントをリセット
                     if(active_frames > aus.Start_frame_threshold):
                         ar.commit_start()
                         recording_state = 2
@@ -316,9 +318,13 @@ def audio_watcher_start(stop_flag, stand_alone = False, port=8000):
                     else:
                         active_frames += 1
                 else:
-                    ar.cancel_start()
-                    recording_state = 0
-                    active_frames = 0
+                    silence_frames += 1
+                    # 無音がStart_frame_thresholdの半分続いた場合のみリセットする
+                    # (会議の一時的な沈黙でスタート判定がキャンセルされないようにするため)
+                    if silence_frames >= aus.Start_frame_threshold / 2:
+                        ar.cancel_start()
+                        recording_state = 0
+                        active_frames = 0
                 continue
             if recording_state == 2:
                 # (継続していた状態から)非アクティブになった瞬間にend_timeを記録し、
