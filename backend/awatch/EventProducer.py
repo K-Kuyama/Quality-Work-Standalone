@@ -110,7 +110,6 @@ class HttpEventProducer(EventProducer):
         else :
             duration = datetime.now(ZoneInfo(self.time_zone)) - start_time
         event_data['window'] = last_window
-        print(f"create event : {event_data['window']['title']}")
         # titleフィールドに入れる文字列長さは0<n<256でなければならない
         title_str = event_data['window']['title']
         if(len(title_str) > 0 ):
