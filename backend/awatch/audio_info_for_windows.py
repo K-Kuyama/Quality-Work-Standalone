@@ -1,6 +1,6 @@
-import ctypes
+#import ctypes
 import logging
-from ctypes import POINTER
+#from ctypes import POINTER
 
 logger = logging.getLogger(f"QualityWork.{__name__}")
 
@@ -60,7 +60,8 @@ def get_capture_sessions():
     """
     device = get_device(EDataFlow.eCapture)
     mgr = device.Activate(IAudioSessionManager2._iid_, CLSCTX_ALL, None)
-    mgr = ctypes.cast(mgr, POINTER(IAudioSessionManager2))
+    mgr = mgr.QueryInterface(IAudioSessionManager2)
+    #mgr = ctypes.cast(mgr, POINTER(IAudioSessionManager2))
 
     session_enumerator = mgr.GetSessionEnumerator()
     count = session_enumerator.GetCount()
@@ -83,7 +84,8 @@ def get_output_level():
     """
     device = get_device(EDataFlow.eRender)  
     meter = device.Activate(IAudioMeterInformation._iid_, CLSCTX_ALL, None)
-    meter = ctypes.cast(meter, POINTER(IAudioMeterInformation))
+    meter = meter.QueryInterface(IAudioMeterInformation)
+    #meter = ctypes.cast(meter, POINTER(IAudioMeterInformation))
     return meter.GetPeakValue()
 
     
@@ -106,7 +108,8 @@ def get_mic_level():
     """
     device = get_device(EDataFlow.eCapture)
     meter = device.Activate(IAudioMeterInformation._iid_, CLSCTX_ALL, None)
-    meter = ctypes.cast(meter, POINTER(IAudioMeterInformation))
+    meter = meter.QueryInterface(IAudioMeterInformation)
+    #meter = ctypes.cast(meter, POINTER(IAudioMeterInformation))
     return meter.GetPeakValue()
 
 
