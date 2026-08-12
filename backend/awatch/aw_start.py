@@ -268,7 +268,7 @@ def aw_start(stop_flag, stand_alone = False, port=8000):
             pass
 
         if window  and (window['title'] == "" or window['title'] == None):    #スクリーンロックの場合
-            logger.debug(f"no title")
+            #logger.debug(f"no title")
             if not bp:
                 if last_window:
                     ep.createEvent(ar, last_window,  time_in_this_loop)

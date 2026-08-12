@@ -20,6 +20,9 @@ import configparser
 
 if sys.platform == "win32":
     from bootstrap.MsixMigrator import migrate_msix_data
+elif sys.platform == "darwin":
+    import AppKit
+    import PyObjCTools.MachSignals
 
 '''
 audio_settings.jsonファイルの監視関連機能
@@ -50,9 +53,21 @@ def handler(signum, frame):
     print("Quit programs.")
     raise KeyboardInterrupt
     sys.exit()
+
+def sigterm_handler(*args):
+    # OSからの終了要求(システム終了・ログアウト等)を受けて、
+    # デーモンスレッドとCoreAudioリソース(集約デバイス/タップ)を解放してから、
+    # トレイアイコンを止めてicon.run()のブロックを抜けさせる。
+    print("SIGTERM received. Shutting down.")
+    stop_running()
+    if _tray_icon is not None:
+        _tray_icon.stop()
+
+    os._exit(0)
+
     
 #def term_handler(signum, frame):
-def term_handler():
+def restart_audio_watcher_on_config_change():
     # SIGTERMを受け取った場合にaudio_watcherを再起動する。
     global auw
     print("restart audio_watcher.")
@@ -115,6 +130,9 @@ def setup_logger():
 システムトレイメニューからの操作関連機能
 '''
 
+# SIGTERMハンドラーからicon.stop()を呼べるようにするための参照
+_tray_icon = None
+
 # 収集デーモンの稼働状態を管理するフラグ
 is_running = True
 
@@ -166,6 +184,29 @@ def stop_all(icon, item):
     stop_running()
     icon.stop()
 
+if sys.platform == "darwin":
+    class _MacTerminationDelegate(AppKit.NSObject):
+        '''
+        macOSのシステム終了/ログアウト時にOSが送ってくる終了リクエスト
+        (Apple Event経由のNSApplication -terminate:)を受け取るデリゲート。
+        ここでデーモンスレッド停止とCoreAudio
+        リソース(集約デバイス/タップ)の解放を行ってからNSTerminateNowを返す。
+        '''
+        def applicationShouldTerminate_(self, sender):
+            print("applicationShouldTerminate_: system quit request received.")
+            stop_running()
+            if _tray_icon is not None:
+                _tray_icon.stop()
+            #os._exit(0)
+            return AppKit.NSTerminateNow
+
+    _app_delegate = None
+
+    def install_mac_termination_delegate():
+        print("installing terminataion delegate.")
+        global _app_delegate
+        _app_delegate = _MacTerminationDelegate.alloc().init()
+        AppKit.NSApplication.sharedApplication().setDelegate_(_app_delegate)
 
 
 def get_icon_file():
@@ -231,6 +272,12 @@ def run_menu(port=9416):
                         # Windowsの左クリック用。Macでは設定しても無害（無視されるだけ）。
                         default_action=open_browser)
 
+    global _tray_icon
+    _tray_icon = icon
+
+    if sys.platform == "darwin":
+        install_mac_termination_delegate()
+        
     icon.run()
 
 
@@ -275,6 +322,11 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, handler)
     #signal.signal(signal.SIGTERM, term_handler)
 
+    if sys.platform == "darwin":
+        PyObjCTools.MachSignals.signal(signal.SIGTERM, sigterm_handler)
+    else:
+        signal.signal(signal.SIGTERM, sigterm_handler)
+        
     # データベースファイルのチェック
     # 初回はマイグレーションを行う
     bootstart(CURRENT_SCHEMA_VERSION)
@@ -288,7 +340,7 @@ if __name__ == "__main__":
         qts.start()
         
     # ファイルチェック用デーモンのスタート
-    fc = threading.Thread(target=check_file, args=(term_handler,), daemon=True)
+    fc = threading.Thread(target=check_file, args=(restart_audio_watcher_on_config_change,), daemon=True)
     fc.start()
 
     #　Web Serverが立ち上がるのを待つため、5秒スリープ

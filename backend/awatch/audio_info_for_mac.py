@@ -216,3 +216,5 @@ class AudioStatus_Mac:
             self._close_tap_monitor()
         return level
 
+    def close(self):
+        self._close_tap_monitor()
