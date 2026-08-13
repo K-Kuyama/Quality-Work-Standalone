@@ -16,6 +16,7 @@ from bootstrap.bootstrap import bootstart
 #from bootstrap.MsixMigrator import migrate_msix_data
 from bootstrap.SplashScreen import show_splash_screen
 from bootstrap.GetServerPort import get_server_port
+from system.utils import get_app_dir
 import configparser
 
 if sys.platform == "win32":
@@ -27,12 +28,11 @@ elif sys.platform == "darwin":
 '''
 audio_settings.jsonファイルの監視関連機能
 '''
-def check_file(_handler):
-    #audio_settings.jsonファイルの変化を監視。変更があった場合、与えられたハンドラーを呼び出す。
-    CONFIG_FILE_PATH = 'media/audio_settings.json'
-    cdir = os.path.dirname(os.path.abspath(__file__))
-    #print(f"currend directory : {cdir}")
-    target_file = os.path.join(cdir, CONFIG_FILE_PATH) 
+def check_file(_handler, port_num):
+    # ユーザーディレクトリにあるaudio_settings.jsonファイルの変化を監視。
+    # 変化があった場合に、与えられたハンドラーを呼び出す。
+    CONFIG_FILE = 'audio_settings.json'
+    target_file = get_app_dir() / "config" / CONFIG_FILE
     print(f"------start checking the file: {target_file} -------")
     p = Path(target_file)
     st = p.stat()
@@ -43,13 +43,14 @@ def check_file(_handler):
         current_time_stamp = p.stat().st_mtime
         if time_stamp != current_time_stamp:
             time_stamp = current_time_stamp
-            _handler()
+            _handler(port_num)
 
 '''
-シグナルハンドラー
+ハンドラー群
 '''
 
 def handler(signum, frame):
+    # キーボードインターラプとがあった時の処理
     print("Quit programs.")
     raise KeyboardInterrupt
     sys.exit()
@@ -63,19 +64,19 @@ def sigterm_handler(*args):
     if _tray_icon is not None:
         _tray_icon.stop()
 
-    os._exit(0)
+    #os._exit(0)
 
     
-#def term_handler(signum, frame):
-def restart_audio_watcher_on_config_change():
-    # SIGTERMを受け取った場合にaudio_watcherを再起動する。
+def restart_audio_watcher_on_config_change(port_num):
+    # audio_watcherを再起動する。
+    # check_fileにハンドラーとして渡され、configファイルが変更された時に呼び出される。
     global auw
     print("restart audio_watcher.")
     stop_event_au.set()
     auw.join()        # ← 完全停止を待つ
     stop_event_au.clear()
     #time.sleep(5)
-    auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), daemon=True)
+    auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), kwargs={"port":port_num}, daemon=True)
     auw.start()
     
 '''
@@ -127,17 +128,16 @@ def setup_logger():
 
 
 '''
-システムトレイメニューからの操作関連機能
+システムトレイメニューから呼び出される関連機能
 '''
 
-# SIGTERMハンドラーからicon.stop()を呼べるようにするための参照
+# SIGTERMハンドラーからicon.stop()を呼べるようにするためのtrayアイコンへの参照
 _tray_icon = None
 
 # 収集デーモンの稼働状態を管理するフラグ
 is_running = True
 
 def stop_running():
-    print("stop runnning")
     # データを収集しているデーモンを停止(終了)する
     global auw, aw
     # オーディオイベント収集の停止
@@ -145,16 +145,16 @@ def stop_running():
         stop_event_au.set()
         auw.join()
         print("-> audio daemon stopped")
-
     # ウインドウイベントの収集停止
     if 'aw' in globals() and aw.is_alive():
         stop_event_w.set()
         aw.join()
         print("-> window daemon stopped")
 
+
 def start_running():
+    # データを収集するデーモンの再起動
     global auw,aw
-    print("start runnning")
     # イベントをクリア（セットされたままだと即終了してしまうため）
     stop_event_au.clear()
     stop_event_w.clear()
@@ -164,14 +164,17 @@ def start_running():
     aw = threading.Thread(target=aw_start, args=(stop_event_w,), daemon=True)
     aw.start()
 
+
 def open_browser(icon, item, port):
+    #デフォルトブラウザにダッシュボード画面を表示する
     webbrowser.open(f"http://127.0.0.1:{port}/dashboard")
+
 
 def toggle_action(icon, item):
     # メニューのボタンから呼ばれるアクション
-    print("toggle_action")
+    # is_running == Trueの場合 : デーモンを停止する
+    #               Falseの場合: デーモンを起動する
     global is_running
-    print(f"state : {is_running}")
     #　状態を反転する
     is_running = not is_running
 
@@ -181,6 +184,7 @@ def toggle_action(icon, item):
         stop_running()
 
 def stop_all(icon, item):
+    # プログラムを終了する
     stop_running()
     icon.stop()
 
@@ -210,7 +214,6 @@ if sys.platform == "darwin":
 
 
 def get_icon_file():
-    
     # PyInstallerで同梱されたリソースの実体パスを返す
     # macOSでは、ファイル名に Template という文字列が含まれていると、それを「色の反転を制御すべき特殊な画像」だと判断。
     # 高精細ディスプレイ環境であれば、OSやライブラリが自動的に QWTemplate@2x.png を探しに行ってくれる。
@@ -240,13 +243,15 @@ def get_tinted_icon(path, color="#555555"):
     return new_image
 
 def run_menu(port=9416):
+    # pystrayを使ってスシステムトレイにメニューを表示する
 
-    # 1. 画像を読み込む
+    # 1. アイコン画像を読み込む
     image_file = get_icon_file()
     if sys.platform == "darwin":
         image = get_tinted_icon(image_file, color="#FFFFFF")
     else:
         image = Image.open(image_file)
+    # 2. メニューを構成する
     menu = pystray.Menu(
 
         pystray.MenuItem(
@@ -265,6 +270,11 @@ def run_menu(port=9416):
         pystray.MenuItem("終了", stop_all)
         #pystray.MenuItem("終了", lambda icon, item: icon.stop())
     )
+
+    # 3. iconを生成しメニューと紐付ける
+    #   MacOSではアイコンクリックでメニュー表示
+    #   Windowsではアイコンクリックでdefault_actionのブラウザ表示を実行
+    #             右クリックでメニュー表示
 
     icon = pystray.Icon("QualityWork",
                         image,
@@ -294,17 +304,17 @@ if __name__ == "__main__":
     CONFIG_FILE = 'config.ini'
     EV_PRODUCER_CLASS = "HttpEventProducerLocal"
 
-    CURRENT_VERSION = "3.6"
+    CURRENT_VERSION = "3.6.1" #スプラッシュ画面に表示されるバージョン番号
     CURRENT_SCHEMA_VERSION = 3
 
-    #Splashウインドウの表示
+    # 1.Splashウインドウの表示
     show_splash_screen(CURRENT_VERSION, duration_ms=3000)
     
     # Windows StoreerotSからダウンロードしたVer3.5のMSIIXからの移行
     if sys.platform == "win32":
         migrate_msix_data()
 
-    #ロガーを取得する
+    # 2.ロガーをセットし取得する
     logger = setup_logger()
 
     logger.info("------Quality-Work start-----")
@@ -316,9 +326,7 @@ if __name__ == "__main__":
         except (configparser.NoSectionError,configparser.NoOptionError):
             logger.warning("EventProducer not defined")          
 
-
-    # ローカルで動くdjangoアプリケーションが設定ファイルを変更した際に
-    # 送ってくるシグナルを受け取る
+    # 3.シグナルハンドラーを設定
     signal.signal(signal.SIGINT, handler)
     #signal.signal(signal.SIGTERM, term_handler)
 
@@ -327,8 +335,8 @@ if __name__ == "__main__":
     else:
         signal.signal(signal.SIGTERM, sigterm_handler)
         
-    # データベースファイルのチェック
-    # 初回はマイグレーションを行う
+    # 4.データベースファイルのチェック
+    #   初回はマイグレーションを行う
     bootstart(CURRENT_SCHEMA_VERSION)
 
     # ポート番号を取得
