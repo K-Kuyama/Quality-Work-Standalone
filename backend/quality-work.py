@@ -344,12 +344,18 @@ if __name__ == "__main__":
 
     # Webサーバーのスタート
     if EV_PRODUCER_CLASS == "HttpEventProducerLocal":
-        qts = threading.Thread(target=server_start, args=(port_num,), daemon=True)
-        qts.start()
+        try:
+            qts = threading.Thread(target=server_start, args=(port_num,), daemon=True)
+            qts.start()
+        except Exception as e:
+            logger.debug(f"exception : {e}")
         
     # ファイルチェック用デーモンのスタート
-    fc = threading.Thread(target=check_file, args=(restart_audio_watcher_on_config_change,), daemon=True)
-    fc.start()
+    try:
+        fc = threading.Thread(target=check_file, args=(restart_audio_watcher_on_config_change,port_num,), daemon=True)
+        fc.start()
+    except Exception as e:
+        logger.debug(f"exception : {e}")
 
     #　Web Serverが立ち上がるのを待つため、5秒スリープ
     time.sleep(5)
@@ -357,15 +363,21 @@ if __name__ == "__main__":
     # オーディオデーモンのスタート
     # スレッドにイベントオブジェクトを設定する
     logger.info("------Audio watcher start-----")
-    stop_event_au = threading.Event()
-    auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), kwargs={"port":port_num}, daemon=True)
-    auw.start()
+    try:
+        stop_event_au = threading.Event()
+        auw = threading.Thread(target=audio_watcher_start, args=(stop_event_au,), kwargs={"port":port_num}, daemon=True)
+        auw.start()
+    except Exception as e:
+        logger.debug(f"exception : {e}")
 
     #ウインドウイベントデーモンのスタート
     logger.info("------Active window watcher start-----")
-    stop_event_w = threading.Event()
-    aw = threading.Thread(target=aw_start, args=(stop_event_w,), kwargs={"port":port_num}, daemon=True)
-    aw.start()
+    try:
+        stop_event_w = threading.Event()
+        aw = threading.Thread(target=aw_start, args=(stop_event_w,), kwargs={"port":port_num}, daemon=True)
+        aw.start()
+    except Exception as e:
+        logger.debug(f"exception : {e}")
 
     # トレイメニューの表示
     run_menu(port_num)
