@@ -92,6 +92,7 @@ info_plist_content = {
     'CFBundleShortVersionString': '1.0.0',
     'CFBundleIconFile': 'QW.icns',
     'NSMicrophoneUsageDescription': '音声デバイスの使用状況を確認するためにマイクへのアクセス権限が必要です。',
+    'NSAudioCaptureUsageDescription': '音声出力を確認するために、システム音声へのアクセス権限が必要です。',
     'NSAppleEventsUsageDescription': 'アクティブなアプリケーション情報を取得するために、システムイベントの制御が必要です。',
     # macOSのセキュリティ緩和（これを入れないと署名後にロードエラーになります）
     'com.apple.security.cs.disable-library-validation': True,
