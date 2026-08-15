@@ -152,6 +152,17 @@ class AudioStatus_Mac:
         self.max_silent_polls = max_silent_polls
         self._tap_monitor = None
         self._silent_streak = 0
+        self._warmup_process_tap_permission()
+
+    def _warmup_process_tap_permission(self):
+        # 初回のキャプチャの許可(NSAudioCaptureUsageDescription)ダイアログを
+        # 起動時に表示するため、一度仮に_ProcessTapMonitorを生成し即時破棄。
+        if _ProcessTapMonitor is None:
+            return
+        try:
+            _ProcessTapMonitor().close()
+        except Exception as e:
+            print("Error:", e)
 
     # 音声デバイスの状態と音声出力の状態の両方をチェックする。両方Trueの場合にTrueを返す
     def is_active(self):
