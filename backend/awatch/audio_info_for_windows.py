@@ -1,6 +1,4 @@
-#import ctypes
 import logging
-#from ctypes import POINTER
 
 logger = logging.getLogger(f"QualityWork.{__name__}")
 
@@ -8,7 +6,7 @@ logger = logging.getLogger(f"QualityWork.{__name__}")
 #  comtypes : WASAPI の COM インターフェイス
 #  pycaw : WASAPI の COM インターフェイスを扱う
 
-from comtypes import CoCreateInstance, CLSCTX_ALL, GUID
+from comtypes import CoCreateInstance, CLSCTX_ALL, GUID, CoInitialize, CoUninitialize
 from comtypes.client import CreateObject
 from comtypes import CoCreateInstance
 from pycaw.pycaw import (
@@ -130,6 +128,8 @@ class AudioStatus_Win:
     """ 
     def __init__(self, silence_threshold):
         self.threshold = silence_threshold
+        # COMの初期化。これをしないとスレッド再起動時にCOMへのアクセスがエラーになる
+        CoInitialize()
 
     def is_active(self):
         """
@@ -161,3 +161,8 @@ class AudioStatus_Win:
                 return False
         except Exception as e:
             logger.warning("Error:", e)
+            return False
+
+    def close(self):
+        # __init__で初期化したこのスレッドのCOMを解放する
+        CoUninitialize()
