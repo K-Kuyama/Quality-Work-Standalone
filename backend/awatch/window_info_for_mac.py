@@ -28,6 +28,13 @@ def request_accessibility_permission():
     options_ptr = c_void_p(objc.pyobjc_id(options))
     return bool(_app_services.AXIsProcessTrustedWithOptions(options_ptr))
 
+def is_accessibility_trusted():
+    """
+    ダイアログを出さずに、現在アクセシビリティが許可されているかどうかだけを返す。
+    """
+    if _app_services is None:
+        return False
+    return bool(_app_services.AXIsProcessTrustedWithOptions(None))
 
 source = """
 global frontApp, frontAppName, windowTitle

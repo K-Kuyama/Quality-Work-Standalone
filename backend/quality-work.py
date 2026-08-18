@@ -337,8 +337,17 @@ if __name__ == "__main__":
 
     # 4.macOSのアクセシビリティ権限が設定されていなければ、これを要求
     if sys.platform == "darwin":
-        from awatch.window_info_for_mac import request_accessibility_permission
+        from awatch.window_info_for_mac import request_accessibility_permission, is_accessibility_trusted
         request_accessibility_permission()
+
+        # アクセシビリティ許可が確定する(または一定時間経過する)まで待ってから後続のデーモン起動に進む。
+        # macOSのTCCは、1つの許可ダイアログに応答待ちの間に別の許可要求が来た場合、
+        # それを黙って無視する（後で自動的に出し直したりはしない）ので、これを防止する。
+        ACCESSIBILITY_WAIT_TIMEOUT_SEC = 60
+        waited_sec = 0
+        while not is_accessibility_trusted() and waited_sec < ACCESSIBILITY_WAIT_TIMEOUT_SEC:
+            time.sleep(1)
+            waited_sec += 1
     
     # 5.データベースファイルのチェック
     #   初回はマイグレーションを行う
