@@ -1,5 +1,32 @@
-from Foundation import NSAppleScript
+import objc
+from Foundation import NSAppleScript, NSMutableDictionary
+from ctypes import cdll, c_void_p, c_bool
+from ctypes.util import find_library
 
+# アクセシビリティ権限が必要になるため、
+#アプリ起動時に一度ApplicationServiceを呼び出して
+# 前倒しでダイアログを出す(request_accessibility_permission)
+
+_app_services_path = find_library("ApplicationServices")
+if _app_services_path:
+    _app_services = cdll.LoadLibrary(_app_services_path)
+    _app_services.AXIsProcessTrustedWithOptions.restype = c_bool
+    _app_services.AXIsProcessTrustedWithOptions.argtypes = [c_void_p]
+else:
+    _app_services = None
+
+
+def request_accessibility_permission():
+    """
+    アクセシビリティ権限の状態を確認し、未許可であればOSの許可ダイアログを表示する。
+    戻り値: 現在アクセシビリティが許可されているかどうか
+    """
+    if _app_services is None:
+        return False
+    options = NSMutableDictionary.dictionary()
+    options["AXTrustedCheckOptionPrompt"] = True
+    options_ptr = c_void_p(objc.pyobjc_id(options))
+    return bool(_app_services.AXIsProcessTrustedWithOptions(options_ptr))
 
 
 source = """

@@ -334,8 +334,13 @@ if __name__ == "__main__":
         PyObjCTools.MachSignals.signal(signal.SIGTERM, sigterm_handler)
     else:
         signal.signal(signal.SIGTERM, sigterm_handler)
-        
-    # 4.データベースファイルのチェック
+
+    # 4.macOSのアクセシビリティ権限が設定されていなければ、これを要求
+    if sys.platform == "darwin":
+        from awatch.window_info_for_mac import request_accessibility_permission
+        request_accessibility_permission()
+    
+    # 5.データベースファイルのチェック
     #   初回はマイグレーションを行う
     bootstart(CURRENT_SCHEMA_VERSION)
 
