@@ -337,6 +337,7 @@ if __name__ == "__main__":
 
     # 4.macOSのアクセシビリティ権限が設定されていなければ、これを要求
     if sys.platform == "darwin":
+        from Foundation import NSRunLoop, NSDate
         from awatch.window_info_for_mac import request_accessibility_permission, is_accessibility_trusted
         request_accessibility_permission()
 
@@ -346,7 +347,8 @@ if __name__ == "__main__":
         ACCESSIBILITY_WAIT_TIMEOUT_SEC = 60
         waited_sec = 0
         while not is_accessibility_trusted() and waited_sec < ACCESSIBILITY_WAIT_TIMEOUT_SEC:
-            time.sleep(1)
+            #time.sleep(1)
+            NSRunLoop.currentRunLoop().runUntilDate_(NSDate.dateWithTimeIntervalSinceNow_(1.0))
             waited_sec += 1
             logger.debug(f"{waited_sec}:{is_accessibility_trusted()}")
     
