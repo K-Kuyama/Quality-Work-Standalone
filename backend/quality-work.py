@@ -348,6 +348,7 @@ if __name__ == "__main__":
         while not is_accessibility_trusted() and waited_sec < ACCESSIBILITY_WAIT_TIMEOUT_SEC:
             time.sleep(1)
             waited_sec += 1
+            logger.debug(f"{waited_sec}:{is_accessibility_trusted()}")
     
     # 5.データベースファイルのチェック
     #   初回はマイグレーションを行う
